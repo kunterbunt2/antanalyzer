@@ -13,5 +13,12 @@ buildNumber.properties
 # Eclipse m2e generated files
 # Eclipse Core
 .project
+.settings
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+# intellij
+.idea
+
+# project specific
+references/internal-build
+
