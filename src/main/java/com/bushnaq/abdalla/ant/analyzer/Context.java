@@ -19,9 +19,9 @@ public class Context {
     public List<AntException> exceptionList = new ArrayList<>();
     String folderRoot;
     String absoluteFolderPath;
-    private String[] mainTargets ;// all targets used when executing ant as parameter
+    List<String> mainTargets ;// all targets used when executing ant as parameter
 
-    public Context(String antFile, String[] mainTargets) {
+    public Context(String antFile, List<String> mainTargets) {
         this.antFile = antFile;
         folderRoot = antFile.substring(0, antFile.lastIndexOf("/"));
         absoluteFolderPath = new File(folderRoot).getAbsolutePath();

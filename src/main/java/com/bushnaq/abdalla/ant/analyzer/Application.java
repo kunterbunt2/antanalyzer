@@ -57,7 +57,7 @@ public class Application implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (!lazyStart) {
-            AntAnalyzer antAnalyzer = new AntAnalyzer();
+            Antanalyzer antAnalyzer = new Antanalyzer();
             antAnalyzer.start(args);
 
 //                main.start(args);

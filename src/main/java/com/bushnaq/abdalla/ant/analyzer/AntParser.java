@@ -15,24 +15,14 @@ public class AntParser {
 
     }
 
-//    public static void main(String[] args) throws IOException {
-//        AntParser antParser = new AntParser();
-//        antParser.loadAntFiles("references/build/build.xml");
-//        antParser.prepare();
-//        antParser.buildTree();
-//    }
-
-
-
-
     void loadAntFiles() throws IOException {
         loadAntFiles(context, context.folderRoot, context.antFile);
 
     }
 
     /**
-     * load the main ant file and any ant file referenced by that main ant file
-     * this method will look into
+     * load the main ant file and any ant file referenced by that main ant file.
+     * this method will look into:
      * any 'ant' sub task (example: <ant antfile="common/build-setup.xml" target="build.copy.x86" />)
      *
      * @param context
