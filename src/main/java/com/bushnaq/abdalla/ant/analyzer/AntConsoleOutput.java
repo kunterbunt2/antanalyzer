@@ -9,11 +9,15 @@ public class AntConsoleOutput {
     private static final String ANSI_RED = "\u001B[31m";
     private static final String ANSI_RESET = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
     private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_GREEN = "\u001B[32m";
+    private static final String ANSI_GRAY = "\u001B[37m";
+
     private final Context context;
 
     protected AntConsoleOutput(Context context) {
         this.context = context;
     }
+
     protected void printExceptions() {
         System.out.printf("\n%s// exceptions%s\n", ANSI_BLUE, ANSI_RESET);
         int exceptionCount = 0;
@@ -37,53 +41,65 @@ public class AntConsoleOutput {
         int targetCount = 0;
         for (String antFile : context.antFileNameSet) {
             Project p = context.projectSet.get(antFile);
-            System.out.printf("%3d %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
+            if (context.usedAntFiles.contains(antFile))
+                System.out.printf("%3d ☐ %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
+            else
+                System.out.printf("%3d X %s%-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_YELLOW, antFile, ANSI_RESET, p.getTargets().size());
             antFileCount++;
             targetCount += p.getTargets().size();
         }
-        System.out.printf("%3d %-" + maxNameLength + "s %4d%n", antFileCount, "sum of all ant files", context.targetMap.values().size());
+        System.out.printf("%3d   %-" + maxNameLength + "s %4d%n", antFileCount, "sum of all ant files", context.targetMap.values().size());
         System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
-        if (context.targetMap.values().size() != targetCount)
-            context.exceptionList.add(new AntException(String.format("Sum of targets '%d' in all ant files does not match number of target '%d'", targetCount, context.targetMap.values().size())));
+//        if (context.targetMap.values().size() != targetCount)
+//            context.exceptionList.add(new AntException(String.format("Sum of targets '%d' in all ant files does not match number of target '%d'", targetCount, context.targetMap.values().size())));
     }
+
     protected void printStatistics() {
         System.out.println();
-        System.out.printf("%d targets in %d ant files\n", context.targetMap.keySet().size(), context.projectSet.size());
+        System.out.printf("%3d targets in %d ant files\n", context.targetMap.keySet().size(), context.projectSet.size());
         printMainTargets();
-        System.out.printf("%d used targets in %d ant files\n", context.usedTargetSet.size(), context.projectSet.size());
+        int usedTargetCount = 0;
+        for(MultiAntTarget target:context.targetMap.values())
+        {
+            if(target.isUsed)
+                usedTargetCount++;
+        }
+        System.out.printf("%3d used targets in %d ant files\n", usedTargetCount, context.usedAntFiles.size());
     }
+
     protected void printUnusedTargets() {
         System.out.printf("\n%s// unused targets%s\n", ANSI_BLUE, ANSI_RESET);
-        List<GlobalTarget> list = AntTools.createGlobalTargetSortedList(context);
+        List<MultiAntTarget> list = AntTools.createGlobalTargetSortedList(context);
         int maxNameLength = 0;
-        for (GlobalTarget target : list) {
-            if (!target.used) {
+        for (MultiAntTarget target : list) {
+            if (!target.isUsed) {
                 maxNameLength = Math.max(maxNameLength, target.target.getName().length());
             }
         }
 
         int targetCount = 0;
-        for (GlobalTarget target : list) {
-            if (!target.used) {
-                System.out.printf("%d %-" + maxNameLength + "s defined at %s %d:%d\n", targetCount + 1, target.target.getName(), target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
+        for (MultiAntTarget target : list) {
+            if (!target.isUsed) {
+                System.out.printf("%3d %s%-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_YELLOW, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
                 targetCount++;
             }
         }
         System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
+
     protected void printTree() {
         int targetMaxCount = 0;
 
-        List<GlobalTarget> list = AntTools.createGlobalTargetSortedList(context);
-        for (GlobalTarget target : list) {
-            if (!context.subTargetSet.contains(target.target)) {
+        List<MultiAntTarget> list = AntTools.createGlobalTargetSortedList(context);
+        for (MultiAntTarget target : list) {
+            if (!target.isSubTarget) {
                 targetMaxCount++;
             }
         }
         int targetCount = 0;
         System.out.printf("\n%s// target tree (yellow=unused)%s\n", ANSI_BLUE, ANSI_RESET);
-        for (GlobalTarget target : list) {
-            if (!context.subTargetSet.contains(target.target)) {
+        for (MultiAntTarget target : list) {
+            if (!target.isSubTarget) {
                 System.out.printf("\n");
                 System.out.printf("%d/%d\n", targetCount + 1, targetMaxCount);
                 printTree(target);
@@ -92,43 +108,50 @@ public class AntConsoleOutput {
         }
         System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
-    private void printTree(GlobalTarget target) {
-        int maxX = 0;
-        int maxY = 0;
-        for (int x = 0; x < GlobalTarget.MAX_X; x++) {
-            int maxColumnWidth = 0;
-            for (int y = 0; y < GlobalTarget.MAX_Y; y++) {
-                if (target.tree[y][x] != null) {
-                    maxX = Math.max(maxX, x);
-                    maxY = Math.max(maxY, y);
-                    target.lineSize[y] = Math.max(target.lineSize[y], x);
-                }
-            }
-        }
 
-        for (int y = 0; y <= maxY; y++) {
+    //    List<Boolean> connected = new ArrayList<Boolean>();
+    public Boolean[] connected = new Boolean[1000];
+
+    private void printTree(MultiAntTarget target) {
+
+        for (int y = 0; y < target.tree.size(); y++) {
             String line = "";
-            for (int x = 0; x <= maxX; x++) {
-                if (target.tree[y][x] != null) {
-                    line += "├── ";
+            for (int x = 0; x < target.tree.size(y); x++) {
+                TreeNode node = target.tree.get(x, y);
+                if (node != null) {
+                    line +=ANSI_GRAY;
+                    if (node.isLastChildNode) {
+                        line += "└── ";
+                        connected[x] = false;
+                    } else {
+                        line += "├── ";
+                        connected[x] = true;
+                    }
+                    line += ANSI_RESET;
 
-                    if (target.tree[y][x].contains(" (used)")) {
-//                        line += ANSI_BLUE;
-                        target.tree[y][x] = target.tree[y][x].replace(" (used)", "");
+                    if (target.tree.get(x, y).isMainNode) {
+                        line += ANSI_GREEN;
+                    } else if (target.tree.get(x, y).isUsed) {
+                        line += ANSI_BLUE;
                     } else {
                         line += ANSI_YELLOW;
                     }
-                    line += target.tree[y][x];
+                    line += target.tree.get(x, y).label;
                     line += ANSI_RESET;
                 } else {
-                    if (target.lineSize[y] > x) {
+                    line +=ANSI_GRAY;
+                    if (connected[x]) {
                         line += "│   ";
+                    } else {
+                        line += "    ";
                     }
+                    line += ANSI_RESET;
                 }
             }
             System.out.printf("%s\n", line);
         }
     }
+
     private void printMainTargets() {
         System.out.printf("\n%s// main ant targets%s\n", ANSI_BLUE, ANSI_RESET);
         int targetCount = 0;
@@ -138,7 +161,6 @@ public class AntConsoleOutput {
         }
         System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
-
 
 
 }

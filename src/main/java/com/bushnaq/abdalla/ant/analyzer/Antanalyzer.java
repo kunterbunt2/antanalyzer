@@ -17,9 +17,13 @@ public class Antanalyzer {
     Context context;
 
     public void start(String[] args) throws IOException {
-        String antFile = args[0];//"references/internal-build/build.xml";
-        String[] mainTargets = args[1].split(",");//{"build.xml/ris3.msiinstaller.all"};
-        context = new Context(antFile, Arrays.asList(mainTargets));
+        String antFile = args[0];
+        if (args.length > 1) {
+            String[] mainTargets = args[1].split(",");
+            context = new Context(antFile, Arrays.asList(mainTargets));
+        } else {
+            context = new Context(antFile, new ArrayList<String>());
+        }
         {
             AntParser antParser = new AntParser(context);
             antParser.loadAntFiles();
@@ -39,40 +43,41 @@ public class Antanalyzer {
 
 
     void buildTree() {
-        markTargets(context, context.folderRoot);
-        buildTree(context, context.folderRoot);
+        markTargets(context.folderRoot);
+        markAntFiles();
+        buildTree(context.folderRoot);
     }
 
-    private void buildTree(Context context, String root) {
-        List<GlobalTarget> list = AntTools.createGlobalTargetSortedList(context);
-        for (GlobalTarget target : list) {
-            if (!context.subTargetSet.contains(target.target)) {
-                buildTree(context, root, target, target, 0, new IntegerVariable());
+    private void buildTree(String root) {
+        List<MultiAntTarget> list = AntTools.createGlobalTargetSortedList(context);
+        for (MultiAntTarget target : list) {
+            if (!target.isSubTarget) {
+                buildTree(root, target, target, 0, new IntegerVariable(), list.get(list.size() - 1).equals(target));
             }
         }
     }
 
-    private void buildTree(Context context, String root, GlobalTarget rootGLobalTarget, GlobalTarget globalTarget, int x, IntegerVariable y) {
+    private void buildTree(String root, MultiAntTarget rootGLobalTarget, MultiAntTarget multiAntTarget, int x, IntegerVariable y, boolean isLastChildNode) {
         //if (rootGLobalTarget.globalTarget.getName().equals("ris.delegationprint.installer.dom.x64"))
         {
-            if (globalTarget.used) {
-                rootGLobalTarget.tree[y.v][x] = globalTarget.target.getName() + "(" + AntTools.extractFileName(globalTarget.target.getLocation().getFileName()) + ")" + " (used)";
-            } else {
-                rootGLobalTarget.tree[y.v][x] = globalTarget.target.getName() + "(" + AntTools.extractFileName(globalTarget.target.getLocation().getFileName()) + ")";
-            }
-
+            TreeNode treeNode = new TreeNode();
+            treeNode.isLastChildNode = isLastChildNode;
+            treeNode.label = multiAntTarget.target.getName() + " (" + AntTools.extractFileName(multiAntTarget.target.getLocation().getFileName()) + ")";
+            treeNode.isUsed = multiAntTarget.isUsed;
+            treeNode.isMainNode = multiAntTarget.isMainNode;
+            rootGLobalTarget.tree.put(x, y.v, treeNode);
 
             x++;
             y.v++;
             int bx = x;
             int by = y.v;
             boolean child = false;
-            for (GlobalTarget subTarget : listDependencies(context, root, globalTarget.target, false)) {
-                child = true;
-                buildTree(context, root, rootGLobalTarget, subTarget, x, y);
+            List<MultiAntTarget> list = listDependencies(context, root, multiAntTarget.target, false);
+            int c=0;
+            for (MultiAntTarget subTarget : list) {
+                buildTree(root, rootGLobalTarget, subTarget, x, y, c == list.size()-1);
+                c++;
             }
-//            if (child)
-//                rootGLobalTarget.tree[by - 1][bx - 1] += " (last)";
         }
     }
 
@@ -80,44 +85,61 @@ public class Antanalyzer {
         for (Project project : context.projectSet.values()) {
             for (Target target : project.getTargets().values()) {
                 if (!target.getName().isEmpty()) {
-                    GlobalTarget firstTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName());
+                    MultiAntTarget firstTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName());
                     if (firstTarget != null) {
                         context.exceptionList.add(new AntException(String.format("target name '%s' already exists at '%s' %d:%d", target.getName(), firstTarget.target.getLocation().getFileName(), firstTarget.target.getLocation().getLineNumber(), firstTarget.target.getLocation().getColumnNumber()), target.getLocation().getFileName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     } else {
-                        context.targetMap.put(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName(), new GlobalTarget(target));
+                        context.targetMap.put(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName(), new MultiAntTarget(target));
                     }
                 }
             }
         }
     }
 
-    private void markTargets(Context context, String root) {
+    private void markAntFiles() {
+        for (MultiAntTarget target : context.targetMap.values()) {
+            if (target.isUsed) {
+                File file = new File(target.target.getLocation().getFileName());
+                String antFileName = AntTools.extractRootFolder(context, file.getPath()) + "/" + file.getName();
+                context.usedAntFiles.add(antFileName);
+            }
+        }
+        for (String antFile : context.antFileNameSet) {
+            if (!context.usedAntFiles.contains(antFile)) {
+                context.unusedAntFiles.add(antFile);
+            }
+        }
+
+    }
+
+    private void markTargets(String root) {
         boolean changed = false;
         do {
             changed = false;
-            for (GlobalTarget globalTarget : context.targetMap.values()) {
-                if (markTargets(context, AntTools.extractRootFolder(context, globalTarget.target.getLocation().getFileName()), globalTarget))
+            for (MultiAntTarget multiAntTarget : context.targetMap.values()) {
+                if (markTargets(AntTools.extractRootFolder(context, multiAntTarget.target.getLocation().getFileName()), multiAntTarget))
                     changed = true;
             }
         }
         while (changed);
     }
 
-    private boolean markTargets(Context context, String root, GlobalTarget globalTarget) {
+    private boolean markTargets(String root, MultiAntTarget multiAntTarget) {
         boolean changed = false;
-        if (context.mainTargetSet.contains(globalTarget.target) && !globalTarget.used) {
-            context.usedTargetSet.add(globalTarget.target);
-            globalTarget.used = true;
+        if (context.mainTargetSet.contains(multiAntTarget.target) && !multiAntTarget.isMainNode) {
+//            context.usedTargetSet.add(multiAntTarget.target);
+            multiAntTarget.isMainNode = true;
+            multiAntTarget.isUsed = true;
             changed = true;
         }
-        for (GlobalTarget subTarget : listDependencies(context, root, globalTarget.target, false)) {
-            context.subTargetSet.add(subTarget.target);
-            if (globalTarget.used) {
-                if (!subTarget.used) {
-                    subTarget.used = true;
-                    context.usedTargetSet.add(subTarget.target);
-                    changed = true;
-                }
+
+        for (MultiAntTarget subTarget : listDependencies(context, root, multiAntTarget.target, false)) {
+            subTarget.isSubTarget = true;
+//            context.subTargetSet.add(subTarget.target);
+            if (multiAntTarget.isUsed && !subTarget.isUsed) {
+                subTarget.isUsed = true;
+//                context.usedTargetSet.add(subTarget.target);
+                changed = true;
             }
         }
 
@@ -127,7 +149,6 @@ public class Antanalyzer {
     void prepare() {
         context.prepare();
     }
-
 
 
     /**
@@ -143,14 +164,14 @@ public class Antanalyzer {
      * @param logExceptions
      * @return list of all dependent targets
      */
-    private List<GlobalTarget> listDependencies(Context context, String root, Target target, boolean logExceptions) {
-        List<GlobalTarget> dependencies = new ArrayList<>();
+    private List<MultiAntTarget> listDependencies(Context context, String root, Target target, boolean logExceptions) {
+        List<MultiAntTarget> dependencies = new ArrayList<>();
         Enumeration<String> dependencEnumeration = target.getDependencies();
         // depends property
         for (String subTarget : Collections.list(dependencEnumeration)) {
-            GlobalTarget childGlobalTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
-            if (childGlobalTarget != null) {
-                dependencies.add(childGlobalTarget);
+            MultiAntTarget childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+            if (childMultiAntTarget != null) {
+                dependencies.add(childMultiAntTarget);
             } else if (logExceptions) {
                 context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
             }
@@ -160,9 +181,9 @@ public class Antanalyzer {
                 //antcall subtask
                 RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
                 String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                GlobalTarget childGlobalTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
-                if (childGlobalTarget != null) {
-                    dependencies.add(childGlobalTarget);
+                MultiAntTarget childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+                if (childMultiAntTarget != null) {
+                    dependencies.add(childMultiAntTarget);
                 } else if (logExceptions) {
                     context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                 }
@@ -170,23 +191,35 @@ public class Antanalyzer {
             if (task.getTaskType().equals("ant")) {
                 //ant sub task
                 File taskAntfile = AntTools.extractSubAntFile(context, AntTools.extractRootFolder(context, target.getLocation().getFileName()), task);
+                RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+                String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
                 if (taskAntfile != null) {
                     //target is in new ant file
-                    RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
-                    String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                    GlobalTarget childGlobalTarget = context.targetMap.get(taskAntfile.getName() + "/" + subTarget);
-                    if (childGlobalTarget != null) {
-                        dependencies.add(childGlobalTarget);
+                    MultiAntTarget childMultiAntTarget;
+                    if (subTarget != null) {
+                        childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + subTarget);
+                    } else {
+//                        Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
+                        childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + context.projectSet.get(AntTools.extractRootFolder(context, taskAntfile.getPath()) + "/" + taskAntfile.getName()).getDefaultTarget());
+                    }
+                    if (childMultiAntTarget != null) {
+                        dependencies.add(childMultiAntTarget);
                     } else if (logExceptions) {
                         context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     }
                 } else {
                     // target is in same ant file
-                    RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
-                    String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                    GlobalTarget childGlobalTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
-                    if (childGlobalTarget != null) {
-                        dependencies.add(childGlobalTarget);
+//                    RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+//                    String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
+                    MultiAntTarget childMultiAntTarget;
+                    if (subTarget != null) {
+                        childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+                    } else {
+                        childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getProject().getDefaultTarget());
+                    }
+
+                    if (childMultiAntTarget != null) {
+                        dependencies.add(childMultiAntTarget);
                     } else if (logExceptions) {
                         context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     }

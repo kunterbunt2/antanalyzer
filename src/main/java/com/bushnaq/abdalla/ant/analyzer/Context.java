@@ -9,14 +9,16 @@ import java.util.*;
 public class Context {
     final String antFile;
     public Set<Target> mainTargetSet = new HashSet<>();// all targets used when executing ant as parameter
-    public SortedMap<String, GlobalTarget> targetMap = new TreeMap<>();// all targets in all ant files
-    public Set<Target> subTargetSet = new HashSet<>();// targets that other targets are dependent on
-    public Set<Target> usedTargetSet = new HashSet<>();// targets that are
+    public SortedMap<String, MultiAntTarget> targetMap = new TreeMap<>();// all targets in all ant files
+//    public Set<Target> subTargetSet = new HashSet<>();// targets that other targets are dependent on
+//    public Set<Target> usedTargetSet = new HashSet<>();// targets that are
     public Map<String, Project> projectSet = new HashMap<>();
-    public Set<String> antFileNameSet = new TreeSet<>();//set of all ant files
-    public Set<String> antFilePathSet = new TreeSet<>();//set of all ant file relative path, only used for error detection
-    public Set<String> missingAntFiles = new TreeSet<>();
-    public List<AntException> exceptionList = new ArrayList<>();
+    public Set<String> antFileNameSet = new TreeSet<>();// set of all ant files
+    public Set<String> antFilePathSet = new TreeSet<>();// set of all ant file relative path, only used for error detection
+    public Set<String> missingAntFiles = new TreeSet<>();// list of ant files referenced but missing
+    public List<AntException> exceptionList = new ArrayList<>();// list of all exceptions found during execution
+    public Set<String> usedAntFiles = new HashSet<String>();
+    public Set<String> unusedAntFiles = new HashSet<String>();
     String folderRoot;
     String absoluteFolderPath;
     List<String> mainTargets ;// all targets used when executing ant as parameter
@@ -30,7 +32,7 @@ public class Context {
 
     public void prepare() {
         for (String targetName : mainTargets) {
-            GlobalTarget t = targetMap.get(targetName);
+            MultiAntTarget t = targetMap.get(targetName);
             if (t != null)
                 mainTargetSet.add(t.target);
         }

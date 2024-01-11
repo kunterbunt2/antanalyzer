@@ -17,6 +17,18 @@ public class AntParser {
 
     void loadAntFiles() throws IOException {
         loadAntFiles(context, context.folderRoot, context.antFile);
+        if(context.mainTargets.isEmpty())
+        {
+            // use default target of main ant file.
+            File file=new File(context.antFile);
+            Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
+            if(mainProject !=null) {
+                context.mainTargets.add(file.getName() + "/" + mainProject.getDefaultTarget());
+            }
+            else {
+                context.exceptionList.add(new AntException("did nto found main ant file"));
+            }
+        }
 
     }
 
