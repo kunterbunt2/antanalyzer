@@ -3,25 +3,32 @@ package com.bushnaq.abdalla.ant.analyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 
 @ComponentScan(basePackages = {"com.ricoh.sdced"})
-@SpringBootApplication
-public class Application implements CommandLineRunner {
+@org.springframework.boot.autoconfigure.SpringBootApplication
+public class SpringBootApplication implements CommandLineRunner {
     private static boolean lazyStart = true;//for junit tests
-    //    private static String moduleVersion = MavenProperiesProvider.getProperty(Application.class, "module.version");
-//    private static String buildNumber = MavenProperiesProvider.getProperty(Application.class, "build.number");
+    private static String moduleVersion = getProperty(SpringBootApplication.class, "module.version");
+    private static String buildNumber = getProperty(SpringBootApplication.class, "build.number");
     private static String startupMessage;
     private static boolean started = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public Application() {
+    public static String getProperty(Class<?> clazz, String name) {
+        ResourceBundle bundle = ResourceBundle.getBundle("maven", Locale.getDefault(), clazz.getClassLoader());
+        return bundle.getString(name);
+    }
+
+    public SpringBootApplication() {
     }
 
     /**
@@ -30,10 +37,10 @@ public class Application implements CommandLineRunner {
      * Not called when running junit test
      */
     public static void main(String[] args) {
-//        startupMessage = String.format("starting %s %s.%s as application", Xlsx2mppParameterOptions.APPLICATION, moduleVersion, buildNumber);
+        startupMessage = String.format("starting %s %s.%s as application", ApplicationCli.APPLICATION, moduleVersion, buildNumber);
         lazyStart = false;
         started = true;
-        SpringApplicationBuilder springApplicationBuilder = new SpringApplicationBuilder(Application.class);
+        SpringApplicationBuilder springApplicationBuilder = new SpringApplicationBuilder(SpringBootApplication.class);
         ConfigurableApplicationContext context = springApplicationBuilder.headless(false).run(args);
         context.close();
     }
@@ -44,14 +51,14 @@ public class Application implements CommandLineRunner {
      * Called when running UNIT TEST
      */
     @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event) throws Exception {
+    public void onApplicationEvent(ContextRefreshedEvent event) {
         if (!started) {
-//            startupMessage = String.format("starting qcd.tool %s.%s within a unit test", moduleVersion, buildNumber);
+            startupMessage = String.format("starting %s %s.%s within a unit test", ApplicationCli.APPLICATION, moduleVersion, buildNumber);
         }
-        logger.info("----------------------------------------------");
-        logger.info("ant.analyzer: analyzes main ant file and any referenced ant files for unused targets.");
+        logger.info("------------------------------------------------------------------------");
+        logger.info(String.format("%s: analyzes main ant file and any referenced ant files for unused targets.", ApplicationCli.APPLICATION));
         logger.info(startupMessage);
-        logger.info("----------------------------------------------");
+        logger.info("------------------------------------------------------------------------");
     }
 
     @Override
@@ -60,9 +67,8 @@ public class Application implements CommandLineRunner {
             Antanalyzer antAnalyzer = new Antanalyzer();
             antAnalyzer.start(args);
 
-//                main.start(args);
             logger.info("------------------------------------------------------------------------");
-//                logger.info(String.format("executed %s %s.%s in %s", Xlsx2mppParameterOptions.APPLICATION, moduleVersion, buildNumber,XlsxUtil.createDurationString(timeKeeping.getDelta(), true, true, false)));
+//            logger.info(String.format("executed %s %s.%s in %s", ApplicationCli.APPLICATION, moduleVersion, buildNumber, XlsxUtil.createDurationString(timeKeeping.getDelta(), true, true, false)));
             logger.info("------------------------------------------------------------------------");
         }
     }
