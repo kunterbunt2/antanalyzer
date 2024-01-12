@@ -22,7 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <start-class>de.bushnaq.abdalla.ant.analyzer.Application</start-class>
+        <start-class>de.bushnaq.abdalla.ant.analyzer.SpringBootApplication</start-class>
     </properties>
 
     <dependencies>
