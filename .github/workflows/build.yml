@@ -1,22 +1,25 @@
-name: native-image-compile
-
-on: [push]
-
-jobs:
-  native-image-compile-in-docker:
-    runs-on: ubuntu-latest
+build:
+    name: ${{ matrix.version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version: [ latest ]
+        os: [ ubuntu-latest ]
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Login into Heroku Container Registry first, so that we can push our Image later
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin registry.heroku.com
-
-      - name: Compile Native Image using Docker
-        run: docker build . --tag=registry.heroku.com/spring-boot-graal/web
-
-      - name: Push to Heroku Container Registry
-        run: docker push registry.heroku.com/spring-boot-graal/web
-
-      - name: Release Dockerized Native Spring Boot App on Heroku
-        run: ./heroku-release.sh spring-boot-graal
-
+      - uses: actions/checkout@v2
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: ${{ matrix.version }}
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        run: mvn -B -ntp package
+        env:
+          NO_DOCKER: ${{ runner.os != 'Linux' }}
