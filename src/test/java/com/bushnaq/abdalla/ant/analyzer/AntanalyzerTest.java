@@ -14,7 +14,7 @@ class AntanalyzerTest {
     @Test
     @DisplayName("test_pcclient( the big test )")
     void test_pcclient() throws Exception {
-        String[] args = {"-ant-file", "references/internal-build/build.xml", "-ant-targets", "ris3.msiinstaller.all,ris3.debug.x64,ris3.debug.x86"};
+        String[] args = {"-ant-file", "references/internal-build/build.xml", "-ant-targets", "ris3.msiinstaller.all,ris3.debug.x64,ris3.debug.x86", "-pt", "-paf", "-put"};
         Antanalyzer antAnalyzer = new Antanalyzer();
         antAnalyzer.start(args);
         assertEquals(33, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
@@ -110,7 +110,7 @@ class AntanalyzerTest {
     @DisplayName("testCase_2_2( ant file, ant task, antfile, default target )")
     @Order(22)
     void testCase_2_2() throws Exception {
-        String[] args = {"-ant-file", "references/case_2_2/build.xml"};
+        String[] args = {"-ant-file", "references/case_2_2/build.xml", "-pt", "-paf", "-put"};
         Antanalyzer antAnalyzer = new Antanalyzer();
         antAnalyzer.start(args);
         assertEquals(2, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
@@ -122,6 +122,36 @@ class AntanalyzerTest {
         assertEquals(0, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
     }
 
+    @Test
+    @DisplayName("testNoParameters( no parameters )")
+    @Order(1000)
+    void testNoParameters() throws Exception {
+        String[] args = {};
+        Antanalyzer antAnalyzer = new Antanalyzer();
+        antAnalyzer.start(args);
+        assertEquals(0, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
+        assertEquals(0, antAnalyzer.context.targetMap.values().size(), "unexpected number of ant targets");
+        assertEquals(0, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
+        assertEquals(0, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
+        assertEquals(0, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
+        assertEquals(0, antAnalyzer.context.exceptionList.size(), "unexpected number of exceptions");
+        assertEquals(0, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
+    }
+    @Test
+    @DisplayName("testPrintHelp( -help )")
+    @Order(1001)
+    void testPrintHelp() throws Exception {
+        String[] args = {"-h"};
+        Antanalyzer antAnalyzer = new Antanalyzer();
+        antAnalyzer.start(args);
+        assertEquals(0, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
+        assertEquals(0, antAnalyzer.context.targetMap.values().size(), "unexpected number of ant targets");
+        assertEquals(0, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
+        assertEquals(0, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
+        assertEquals(0, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
+        assertEquals(0, antAnalyzer.context.exceptionList.size(), "unexpected number of exceptions");
+        assertEquals(0, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
+    }
     private int getUsedTargetCount(Collection<MultiAntTarget> values) {
         int count = 0;
         for (MultiAntTarget target : values) {

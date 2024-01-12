@@ -22,28 +22,30 @@ public class Antanalyzer {
         context = new Context();
         AntConsoleOutput antConsoleOutput = new AntConsoleOutput(context);
         ApplicationCli applicationCli = new ApplicationCli(context);
-        applicationCli.start(args);
+        if( !applicationCli.start(args))
         {
-            AntParser antParser = new AntParser(context);
-            antConsoleOutput.printString("parsing ant files...");
-            antParser.loadAntFiles();
-        }
-        antConsoleOutput.printString("analyzing targets...");
-        collectAllTargets();
-        prepare();
-        antConsoleOutput.printString("building tree...");
-        buildTree();
-        {
-            if (context.isPrintTree())
-                antConsoleOutput.printTree();
-            if (context.isPrintAntFiles())
-                antConsoleOutput.printAntFiles();
-            if (context.isPrintUnusedTargets())
-                antConsoleOutput.printUnusedTargets();
-            antConsoleOutput.printMainTargets();
-            antConsoleOutput.printStatistics();
-            antConsoleOutput.printExceptions();
-            antConsoleOutput.printSuccess();
+            {
+                AntParser antParser = new AntParser(context);
+                antConsoleOutput.printString("parsing ant files...");
+                antParser.loadAntFiles();
+            }
+            antConsoleOutput.printString("analyzing targets...");
+            collectAllTargets();
+            prepare();
+            antConsoleOutput.printString("building tree...");
+            buildTree();
+            {
+                if (context.isPrintTree())
+                    antConsoleOutput.printTree();
+                if (context.isPrintAntFiles())
+                    antConsoleOutput.printAntFiles();
+                if (context.isPrintUnusedTargets())
+                    antConsoleOutput.printUnusedTargets();
+                antConsoleOutput.printMainTargets();
+                antConsoleOutput.printStatistics();
+                antConsoleOutput.printExceptions();
+                antConsoleOutput.printSuccess();
+            }
         }
     }
 

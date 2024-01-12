@@ -21,38 +21,38 @@ public class AntConsoleOutput {
     protected void printExceptions() {
         if(!context.exceptionList.isEmpty())
         {
-            System.out.printf("\n%s// exceptions%s\n", ANSI_BLUE, ANSI_RESET);
+            System.out.printf("\n%s# exceptions%s\n", ANSI_BLUE, ANSI_RESET);
             int exceptionCount = 0;
             for (AntException e : context.exceptionList) {
                 System.out.printf("%s%03d '%s' %s %d:%d%n%s", ANSI_RED, exceptionCount + 1, e.getMessage(), e.file, e.lineNumber, e.columnNumber, ANSI_RESET);
                 exceptionCount++;
             }
-            System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
+//            System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
         }
     }
 
     protected void printAntFiles() {
         int maxNameLength = 0;
         for (String antFile : context.antFileNameSet) {
-            maxNameLength = Math.max(maxNameLength, antFile.length());
+            maxNameLength = Math.max(maxNameLength, antFile.length()+5);
         }
 
-        System.out.printf("\n%s// ant files%s\n", ANSI_BLUE, ANSI_RESET);
-        String format = "#   %-" + maxNameLength + "s targets%n";
+        System.out.printf("\n%s# ant files%s\n", ANSI_BLUE, ANSI_RESET);
+        String format = "#       %-" + maxNameLength + "s targets%n";
         System.out.printf(format, "Ant file name");
         int antFileCount = 0;
         int targetCount = 0;
         for (String antFile : context.antFileNameSet) {
             Project p = context.projectSet.get(antFile);
             if (context.usedAntFiles.contains(antFile))
-                System.out.printf("%3d ☐ %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
+                System.out.printf("%3d     %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
             else
-                System.out.printf("%3d X %s%-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_YELLOW, antFile, ANSI_RESET, p.getTargets().size());
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_YELLOW, antFile, ANSI_RESET, p.getTargets().size());
             antFileCount++;
             targetCount += p.getTargets().size();
         }
-        System.out.printf("%3d   %-" + maxNameLength + "s %4d%n", antFileCount, "sum of all ant files", context.targetMap.values().size());
-        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("%3d     %-" + maxNameLength + "s %4d%n", antFileCount, "sum of all ant files", context.targetMap.values().size());
+//        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
 //        if (context.targetMap.values().size() != targetCount)
 //            context.exceptionList.add(new AntException(String.format("Sum of targets '%d' in all ant files does not match number of target '%d'", targetCount, context.targetMap.values().size())));
     }
@@ -76,7 +76,7 @@ public class AntConsoleOutput {
     }
 
     protected void printUnusedTargets() {
-        System.out.printf("\n%s// unused targets%s\n", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("\n%s# unused targets%s\n", ANSI_BLUE, ANSI_RESET);
         List<MultiAntTarget> list = AntTools.createGlobalTargetSortedList(context);
         int maxNameLength = 0;
         for (MultiAntTarget target : list) {
@@ -88,11 +88,11 @@ public class AntConsoleOutput {
         int targetCount = 0;
         for (MultiAntTarget target : list) {
             if (!target.isUsed) {
-                System.out.printf("%3d %s%-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_YELLOW, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_YELLOW, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
                 targetCount++;
             }
         }
-        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
+//        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
 
     protected void printTree() {
@@ -105,7 +105,7 @@ public class AntConsoleOutput {
             }
         }
         int targetCount = 0;
-        System.out.printf("\n%s// target tree (yellow=unused)%s\n", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("\n%s# target tree (yellow=unused, blue=used, green=main)%s\n", ANSI_BLUE, ANSI_RESET);
         for (MultiAntTarget target : list) {
             if (!target.isSubTarget) {
                 System.out.printf("\n");
@@ -114,7 +114,7 @@ public class AntConsoleOutput {
                 targetCount++;
             }
         }
-        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
+//        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
 
     //    List<Boolean> connected = new ArrayList<Boolean>();
@@ -137,14 +137,17 @@ public class AntConsoleOutput {
                     }
                     line += ANSI_RESET;
 
-                    if (target.tree.get(x, y).isMainNode) {
+                    if (node.isMainNode) {
                         line += ANSI_GREEN;
-                    } else if (target.tree.get(x, y).isUsed) {
+                        line += "";
+                    } else if (node.isUsed) {
                         line += ANSI_BLUE;
+                        line += "";
                     } else {
                         line += ANSI_YELLOW;
+                        line += "[X] ";
                     }
-                    line += target.tree.get(x, y).label;
+                    line += node.label;
                     line += ANSI_RESET;
                 } else {
                     line +=ANSI_GRAY;
