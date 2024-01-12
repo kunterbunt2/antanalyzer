@@ -6,8 +6,10 @@ import org.apache.tools.ant.Target;
 import org.apache.tools.ant.Task;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * Uses AntParser to read ant files and analyze which cannot be reached by the given main targets.
@@ -16,28 +18,32 @@ import java.util.*;
 public class Antanalyzer {
     Context context;
 
-    public void start(String[] args) throws IOException {
-        String antFile = args[0];
-        if (args.length > 1) {
-            String[] mainTargets = args[1].split(",");
-            context = new Context(antFile, Arrays.asList(mainTargets));
-        } else {
-            context = new Context(antFile, new ArrayList<String>());
-        }
+    public void start(String[] args) throws Exception {
+        context = new Context();
+        AntConsoleOutput antConsoleOutput = new AntConsoleOutput(context);
+        ApplicationCli applicationCli = new ApplicationCli(context);
+        applicationCli.start(args);
         {
             AntParser antParser = new AntParser(context);
+            antConsoleOutput.printString("parsing ant files...");
             antParser.loadAntFiles();
         }
+        antConsoleOutput.printString("analyzing targets...");
         collectAllTargets();
         prepare();
+        antConsoleOutput.printString("building tree...");
         buildTree();
         {
-            AntConsoleOutput antConsoleOutput = new AntConsoleOutput(context);
-            antConsoleOutput.printTree();
-            antConsoleOutput.printAntFiles();
-            antConsoleOutput.printUnusedTargets();
+            if (context.isPrintTree())
+                antConsoleOutput.printTree();
+            if (context.isPrintAntFiles())
+                antConsoleOutput.printAntFiles();
+            if (context.isPrintUnusedTargets())
+                antConsoleOutput.printUnusedTargets();
+            antConsoleOutput.printMainTargets();
             antConsoleOutput.printStatistics();
             antConsoleOutput.printExceptions();
+            antConsoleOutput.printSuccess();
         }
     }
 
@@ -73,9 +79,9 @@ public class Antanalyzer {
             int by = y.v;
             boolean child = false;
             List<MultiAntTarget> list = listDependencies(context, root, multiAntTarget.target, false);
-            int c=0;
+            int c = 0;
             for (MultiAntTarget subTarget : list) {
-                buildTree(root, rootGLobalTarget, subTarget, x, y, c == list.size()-1);
+                buildTree(root, rootGLobalTarget, subTarget, x, y, c == list.size() - 1);
                 c++;
             }
         }

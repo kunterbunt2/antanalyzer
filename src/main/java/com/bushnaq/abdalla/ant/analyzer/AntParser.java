@@ -4,7 +4,6 @@ import org.apache.tools.ant.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 
 public class AntParser {
 
@@ -16,14 +15,14 @@ public class AntParser {
     }
 
     void loadAntFiles() throws IOException {
-        loadAntFiles(context, context.folderRoot, context.antFile);
-        if(context.mainTargets.isEmpty())
+        loadAntFiles(context, context.folderRoot, context.getAntFile());
+        if(context.mainAntTargets.isEmpty())
         {
             // use default target of main ant file.
-            File file=new File(context.antFile);
+            File file=new File(context.getAntFile());
             Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
             if(mainProject !=null) {
-                context.mainTargets.add(file.getName() + "/" + mainProject.getDefaultTarget());
+                context.mainAntTargets.add(file.getName() + "/" + mainProject.getDefaultTarget());
             }
             else {
                 context.exceptionList.add(new AntException("did nto found main ant file"));

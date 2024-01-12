@@ -19,13 +19,16 @@ public class AntConsoleOutput {
     }
 
     protected void printExceptions() {
-        System.out.printf("\n%s// exceptions%s\n", ANSI_BLUE, ANSI_RESET);
-        int exceptionCount = 0;
-        for (AntException e : context.exceptionList) {
-            System.out.printf("%s%03d '%s' %s %d:%d%n%s", ANSI_RED, exceptionCount + 1, e.getMessage(), e.file, e.lineNumber, e.columnNumber, ANSI_RESET);
-            exceptionCount++;
+        if(!context.exceptionList.isEmpty())
+        {
+            System.out.printf("\n%s// exceptions%s\n", ANSI_BLUE, ANSI_RESET);
+            int exceptionCount = 0;
+            for (AntException e : context.exceptionList) {
+                System.out.printf("%s%03d '%s' %s %d:%d%n%s", ANSI_RED, exceptionCount + 1, e.getMessage(), e.file, e.lineNumber, e.columnNumber, ANSI_RESET);
+                exceptionCount++;
+            }
+            System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
         }
-        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
 
     protected void printAntFiles() {
@@ -54,17 +57,22 @@ public class AntConsoleOutput {
 //            context.exceptionList.add(new AntException(String.format("Sum of targets '%d' in all ant files does not match number of target '%d'", targetCount, context.targetMap.values().size())));
     }
 
+    protected void printSuccess() {
+        System.out.printf("\n%sSuccess%s\n", ANSI_GREEN, ANSI_RESET);
+    }
+    protected void printString(String line) {
+        System.out.printf("%s\n", line);
+    }
     protected void printStatistics() {
-        System.out.println();
-        System.out.printf("%3d targets in %d ant files\n", context.targetMap.keySet().size(), context.projectSet.size());
-        printMainTargets();
+        System.out.printf("\n%s# statistics%s\n", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("%3d targets in %d ant file(s)\n", context.targetMap.keySet().size(), context.projectSet.size());
         int usedTargetCount = 0;
         for(MultiAntTarget target:context.targetMap.values())
         {
             if(target.isUsed)
                 usedTargetCount++;
         }
-        System.out.printf("%3d used targets in %d ant files\n", usedTargetCount, context.usedAntFiles.size());
+        System.out.printf("%3d used targets in %d ant file(s)\n", usedTargetCount, context.usedAntFiles.size());
     }
 
     protected void printUnusedTargets() {
@@ -152,14 +160,14 @@ public class AntConsoleOutput {
         }
     }
 
-    private void printMainTargets() {
-        System.out.printf("\n%s// main ant targets%s\n", ANSI_BLUE, ANSI_RESET);
+    void printMainTargets() {
+        System.out.printf("\n%s# main ant targets%s\n", ANSI_BLUE, ANSI_RESET);
         int targetCount = 0;
-        for (String mainTarget : context.mainTargets) {
+        for (String mainTarget : context.mainAntTargets) {
             System.out.printf("%3d %s%n", targetCount + 1, mainTarget);
             targetCount++;
         }
-        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
+//        System.out.printf("%s# --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
     }
 
 
