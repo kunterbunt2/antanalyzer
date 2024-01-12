@@ -1,4 +1,7 @@
-build:
+name: GraalVM build
+on: [ push, pull_request ]
+jobs:
+  build:
     name: ${{ matrix.version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
