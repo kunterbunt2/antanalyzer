@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.ant.analyzer;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Target;

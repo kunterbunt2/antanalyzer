@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.ant.analyzer;
 
 public class AntException extends Exception {
     public final String file;
