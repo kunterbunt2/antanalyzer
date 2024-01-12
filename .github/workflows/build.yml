@@ -1,3 +1,8 @@
+name: native-image-compile
+
+on: [push]
+
+jobs:
   native-image-compile-in-docker:
     runs-on: ubuntu-latest
     steps:
