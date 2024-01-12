@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.antanalyzer;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;

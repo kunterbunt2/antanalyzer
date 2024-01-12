@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.antanalyzer;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.antanalyzer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

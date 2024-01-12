@@ -11,18 +11,16 @@
     </parent>
 
     <groupId>com.ricoh.sdced</groupId>
-    <artifactId>ant.analyzer</artifactId>
+    <artifactId>antanalyzer</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>ant.analyzer</name>
-    <url>http://maven.apache.org</url>
+    <name>antanalyzer</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-        <start-class>com.ricoh.sdced.qcd.tool.Application</start-class>
+        <java.version>8</java.version>
+        <start-class>de.bushnaq.abdalla.antanalyzer.SpringBootApplication</start-class>
     </properties>
 
     <dependencies>
@@ -62,4 +60,29 @@
             <version>1.4</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+            </plugin>
+            <!--
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+            </plugin>
+            -->
+            <!-- Configure the compilation -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${file.encoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

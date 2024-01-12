@@ -1,4 +1,4 @@
-package com.bushnaq.abdalla.ant.analyzer;
+package de.bushnaq.abdalla.antanalyzer;
 
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Task;
