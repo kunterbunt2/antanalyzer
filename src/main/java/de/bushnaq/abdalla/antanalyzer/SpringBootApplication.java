@@ -17,8 +17,8 @@ import java.util.ResourceBundle;
 @org.springframework.boot.autoconfigure.SpringBootApplication
 public class SpringBootApplication implements CommandLineRunner {
     private static boolean lazyStart = true;//for junit tests
-    private static String moduleVersion = getProperty(SpringBootApplication.class, "module.version");
-    private static String buildNumber = getProperty(SpringBootApplication.class, "build.number");
+    private static final String moduleVersion = getProperty(SpringBootApplication.class, "project.version");
+    private static final String buildNumber = getProperty(SpringBootApplication.class, "build.number");
     private static String startupMessage;
     private static boolean started = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
