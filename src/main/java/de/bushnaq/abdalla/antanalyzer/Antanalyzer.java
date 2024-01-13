@@ -1,5 +1,7 @@
 package de.bushnaq.abdalla.antanalyzer;
 
+import de.bushnaq.abdalla.antanalyzer.util.AntTools;
+import de.bushnaq.abdalla.antanalyzer.util.IntegerVariable;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Target;

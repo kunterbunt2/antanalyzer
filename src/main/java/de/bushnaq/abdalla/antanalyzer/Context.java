@@ -16,8 +16,8 @@ public class Context {
     public List<AntException> exceptionList = new ArrayList<>();// list of all exceptions found during execution
     public Set<String> usedAntFiles = new HashSet<String>();
     public Set<String> unusedAntFiles = new HashSet<String>();
-    String folderRoot;
-    String absoluteFolderPath;
+    public String folderRoot;
+    public String absoluteFolderPath;
     List<String> mainAntTargets = new ArrayList<>();// all targets used when executing ant as parameter
     private String antFile;
     private boolean printTree;

@@ -1,5 +1,7 @@
 package de.bushnaq.abdalla.antanalyzer;
 
+import de.bushnaq.abdalla.antanalyzer.util.TimeKeeping;
+import de.bushnaq.abdalla.antanalyzer.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -18,7 +20,8 @@ import java.util.ResourceBundle;
 public class SpringBootApplication implements CommandLineRunner {
     private static boolean lazyStart = true;//for junit tests
     private static final String moduleVersion = getProperty(SpringBootApplication.class, "project.version");
-    private static final String buildNumber = getProperty(SpringBootApplication.class, "build.number");
+//    private static final String buildNumber = getProperty(SpringBootApplication.class, "build.number");
+    private static String buildTime = getProperty(SpringBootApplication.class, "build.time");
     private static String startupMessage;
     private static boolean started = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -37,7 +40,7 @@ public class SpringBootApplication implements CommandLineRunner {
      * Not called when running junit test
      */
     public static void main(String[] args) {
-        startupMessage = String.format("starting %s %s.%s as application", ApplicationCli.APPLICATION, moduleVersion, buildNumber);
+        startupMessage = String.format("starting %s %s-%s as application", ApplicationCli.APPLICATION, moduleVersion, buildTime);
         lazyStart = false;
         started = true;
         SpringApplicationBuilder springApplicationBuilder = new SpringApplicationBuilder(SpringBootApplication.class);
@@ -53,7 +56,7 @@ public class SpringBootApplication implements CommandLineRunner {
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (!started) {
-            startupMessage = String.format("starting %s %s.%s within a unit test", ApplicationCli.APPLICATION, moduleVersion, buildNumber);
+            startupMessage = String.format("starting %s %s-%s within a unit test", ApplicationCli.APPLICATION, moduleVersion, buildTime);
         }
         logger.info("------------------------------------------------------------------------");
         logger.info(String.format("%s: analyzes main ant file and any referenced ant files for unused targets.", ApplicationCli.APPLICATION));
@@ -64,12 +67,14 @@ public class SpringBootApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (!lazyStart) {
-            Antanalyzer antAnalyzer = new Antanalyzer();
-            antAnalyzer.start(args);
+            try (TimeKeeping timeKeeping = new TimeKeeping(String.format("ended [%-25s].", ApplicationCli.APPLICATION))) {
+                Antanalyzer antAnalyzer = new Antanalyzer();
+                antAnalyzer.start(args);
 
-            logger.info("------------------------------------------------------------------------");
-//            logger.info(String.format("executed %s %s.%s in %s", ApplicationCli.APPLICATION, moduleVersion, buildNumber, XlsxUtil.createDurationString(timeKeeping.getDelta(), true, true, false)));
-            logger.info("------------------------------------------------------------------------");
+                logger.info("------------------------------------------------------------------------");
+                logger.info(String.format("executed %s %s-%s in %s", ApplicationCli.APPLICATION, moduleVersion, buildTime, Util.createDurationString(timeKeeping.getDelta(), true, true, false)));
+                logger.info("------------------------------------------------------------------------");
+            }
         }
     }
 
