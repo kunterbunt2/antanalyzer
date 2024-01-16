@@ -57,13 +57,14 @@
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <buildArgs>
+                        <arg>-H:TempDirectory=${project.build.directory}/TempDirectory</arg>
+                        <arg>-H:IncludeResources=".*/maven.properties"</arg>
+                    </buildArgs>
+                </configuration>
             </plugin>
-            <!--
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-            </plugin>
-            -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
@@ -82,5 +83,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

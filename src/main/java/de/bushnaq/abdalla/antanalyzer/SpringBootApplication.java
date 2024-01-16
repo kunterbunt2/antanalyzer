@@ -20,8 +20,7 @@ import java.util.ResourceBundle;
 public class SpringBootApplication implements CommandLineRunner {
     private static boolean lazyStart = true;//for junit tests
     private static final String moduleVersion = getProperty(SpringBootApplication.class, "project.version");
-//    private static final String buildNumber = getProperty(SpringBootApplication.class, "build.number");
-    private static String buildTime = getProperty(SpringBootApplication.class, "build.time");
+    private static final String buildTime = "2";//getProperty(SpringBootApplication.class, "build.time");
     private static String startupMessage;
     private static boolean started = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
