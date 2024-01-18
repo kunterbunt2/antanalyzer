@@ -4,29 +4,61 @@
 name: antanalyzer
 
 on:
-  workflow_dispatch: null
+  push:
+    tags:
+      # Sequence of patterns matched against refs/tags
+      - '*'
 
 jobs:
-  build:
-
+  create-release-job:
+    name: create-release-job
     runs-on: ubuntu-latest
-
+    outputs:
+      output1: ${{ steps.create_release.outputs.upload_url }}
+      output2: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 8
+      - name: checkout-code-step
+        uses: actions/checkout@v3
+      - name: set-up-jdk-17-step
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: adopt
-      - name: Build with Maven
-        run: |
-          echo $DISPLAY
-          echo "hallo"
-          unset DISPLAY
-          echo $DISPLAY
-          mvn clean package -DskipTests --batch-mode --update-snapshots package
-      - name: Upload test result
-        uses: actions/upload-artifact@v2
+      - name: create-release-step
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          name: zip release
-          path: target/antanalyzer*.zip
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            TBD
+          draft: false
+          prerelease: false
+  build-windows-job:
+    name: build-windows-job
+    runs-on: windows-latest
+    needs: create-release-job
+    steps:
+      - name: checkout-code-step
+        uses: actions/checkout@v3
+      - name: set-up-jdk-17-step
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: adopt
+      - name: build-with-maven-step
+        env:
+          TAG_NAME: ${{ needs.create-release-job.outputs.output2 }}
+        run: |
+          mvn clean package -DskipTests --batch-mode --update-snapshots package
+      - name: upload-msi-step
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create-release-job.outputs.output1 }}
+          asset_path: ./target/antanalyzer*.zip
+          asset_name: antanalyzer.zip
+          asset_content_type: application/octet-stream
