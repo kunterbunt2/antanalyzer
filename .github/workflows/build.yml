@@ -53,6 +53,7 @@ jobs:
           TAG_NAME: ${{ needs.create-release-job.outputs.output2 }}
         run: |
           mvn clean package -DskipTests --batch-mode --update-snapshots package
+          dir target
       - name: upload-msi-step
         uses: actions/upload-release-asset@v1
         env:
