@@ -8,4 +8,3 @@ set mypath=%~dp0
 cd /D %mypath%
 call java -cp intern/lib/*  de.bushnaq.abdalla.antanalyzer.SpringBootApplication %*
 popd
-pause
