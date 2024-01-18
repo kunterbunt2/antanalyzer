@@ -1,11 +1,15 @@
 package de.bushnaq.abdalla.antanalyzer;
 
+import de.bushnaq.abdalla.antanalyzer.util.AntTools;
+import de.bushnaq.abdalla.antanalyzer.util.IntegerVariable;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Target;
 import org.apache.tools.ant.Task;
 
 import java.io.File;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -20,31 +24,31 @@ public class Antanalyzer {
 
     public void start(String[] args) throws Exception {
         context = new Context();
-        AntConsoleOutput antConsoleOutput = new AntConsoleOutput(context);
-        ApplicationCli applicationCli = new ApplicationCli(context);
-        if( !applicationCli.start(args))
+        AntanalyzerConsoleOutput antanalyzerConsoleOutput = new AntanalyzerConsoleOutput(context);
+        AntanalyzerCli antanalyzerCli = new AntanalyzerCli(context);
+        if( !antanalyzerCli.start(args))
         {
             {
-                AntParser antParser = new AntParser(context);
-                antConsoleOutput.printString("parsing ant files...");
-                antParser.loadAntFiles();
+                AntanalyzerParser antanalyzerParser = new AntanalyzerParser(context);
+                antanalyzerConsoleOutput.printString("parsing ant files...");
+                antanalyzerParser.loadAntFiles();
             }
-            antConsoleOutput.printString("analyzing targets...");
+            antanalyzerConsoleOutput.printString("analyzing targets...");
             collectAllTargets();
             prepare();
-            antConsoleOutput.printString("building tree...");
+            antanalyzerConsoleOutput.printString("building tree...");
             buildTree();
             {
                 if (context.isPrintTree())
-                    antConsoleOutput.printTree();
+                    antanalyzerConsoleOutput.printTree();
                 if (context.isPrintAntFiles())
-                    antConsoleOutput.printAntFiles();
+                    antanalyzerConsoleOutput.printAntFiles();
                 if (context.isPrintUnusedTargets())
-                    antConsoleOutput.printUnusedTargets();
-                antConsoleOutput.printMainTargets();
-                antConsoleOutput.printStatistics();
-                antConsoleOutput.printExceptions();
-                antConsoleOutput.printSuccess();
+                    antanalyzerConsoleOutput.printUnusedTargets();
+                antanalyzerConsoleOutput.printMainTargets();
+                antanalyzerConsoleOutput.printStatistics();
+                antanalyzerConsoleOutput.printExceptions();
+                antanalyzerConsoleOutput.printSuccess();
             }
         }
     }
@@ -95,7 +99,7 @@ public class Antanalyzer {
                 if (!target.getName().isEmpty()) {
                     MultiAntTarget firstTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName());
                     if (firstTarget != null) {
-                        context.exceptionList.add(new AntException(String.format("target name '%s' already exists at '%s' %d:%d", target.getName(), firstTarget.target.getLocation().getFileName(), firstTarget.target.getLocation().getLineNumber(), firstTarget.target.getLocation().getColumnNumber()), target.getLocation().getFileName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                        context.exceptionList.add(new AntanalyzerException(String.format("target name '%s' already exists at '%s' %d:%d", target.getName(), firstTarget.target.getLocation().getFileName(), firstTarget.target.getLocation().getLineNumber(), firstTarget.target.getLocation().getColumnNumber()), target.getLocation().getFileName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     } else {
                         context.targetMap.put(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getName(), new MultiAntTarget(target));
                     }
@@ -181,7 +185,7 @@ public class Antanalyzer {
             if (childMultiAntTarget != null) {
                 dependencies.add(childMultiAntTarget);
             } else if (logExceptions) {
-                context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
             }
         }
         for (Task task : target.getTasks()) {
@@ -193,7 +197,7 @@ public class Antanalyzer {
                 if (childMultiAntTarget != null) {
                     dependencies.add(childMultiAntTarget);
                 } else if (logExceptions) {
-                    context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                    context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                 }
             }
             if (task.getTaskType().equals("ant")) {
@@ -213,7 +217,7 @@ public class Antanalyzer {
                     if (childMultiAntTarget != null) {
                         dependencies.add(childMultiAntTarget);
                     } else if (logExceptions) {
-                        context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                        context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     }
                 } else {
                     // target is in same ant file
@@ -229,7 +233,7 @@ public class Antanalyzer {
                     if (childMultiAntTarget != null) {
                         dependencies.add(childMultiAntTarget);
                     } else if (logExceptions) {
-                        context.exceptionList.add(new AntException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                        context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                     }
                 }
             }

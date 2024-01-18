@@ -10,9 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AntanalyzerTest {
 
-    //    @Test
     @Test
-    @DisplayName("test_pcclient( the big test )")
+    //@DisplayName("test_pcclient( the big test )")
     void test_pcclient() throws Exception {
         String[] args = {"-ant-file", "references/internal-build/build.xml", "-ant-targets", "ris3.msiinstaller.all,ris3.debug.x64,ris3.debug.x86", "-pt", "-paf", "-put"};
         Antanalyzer antAnalyzer = new Antanalyzer();
@@ -27,10 +26,27 @@ class AntanalyzerTest {
     }
 
     @Test
+    @DisplayName("testCase_0_1( ant file, default target )")
+    @Order(1)
+    void testCase_0_1() throws Exception {
+        String[] args = {"-ant-file", "build.xml"};
+
+        Antanalyzer antAnalyzer = new Antanalyzer();
+        antAnalyzer.start(args);
+        assertEquals(1, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
+        assertEquals(4, antAnalyzer.context.targetMap.values().size(), "unexpected number of ant targets");
+        assertEquals(3, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
+        assertEquals(1, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
+        assertEquals(0, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
+        assertEquals(0, antAnalyzer.context.exceptionList.size(), "unexpected number of exceptions");
+        assertEquals(0, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
+    }
+    @Test
     @DisplayName("testCase_1_1( ant file, default target )")
     @Order(11)
     void testCase_1_1() throws Exception {
         String[] args = {"-ant-file", "references/case_1_1/build.xml"};
+
         Antanalyzer antAnalyzer = new Antanalyzer();
         antAnalyzer.start(args);
         assertEquals(1, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");

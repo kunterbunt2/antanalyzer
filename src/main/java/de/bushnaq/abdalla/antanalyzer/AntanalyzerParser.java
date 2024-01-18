@@ -1,31 +1,34 @@
 package de.bushnaq.abdalla.antanalyzer;
 
-import org.apache.tools.ant.*;
+import de.bushnaq.abdalla.antanalyzer.util.AntTools;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
+import org.apache.tools.ant.Target;
+import org.apache.tools.ant.Task;
 
 import java.io.File;
 import java.io.IOException;
 
-public class AntParser {
+public class AntanalyzerParser {
 
     Context context;
 
-    public AntParser(Context context) {
+    public AntanalyzerParser(Context context) {
         this.context = context;
 
     }
 
     void loadAntFiles() throws IOException {
         loadAntFiles(context, context.folderRoot, context.getAntFile());
-        if(context.mainAntTargets.isEmpty())
-        {
+        if (context.mainAntTargets.isEmpty()) {
             // use default target of main ant file.
-            File file=new File(context.getAntFile());
-            Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
-            if(mainProject !=null) {
+            File file = new File(context.getAntFile());
+            String antFilePath = AntTools.extractRootFolder(context, file.getPath()) + "/" + file.getName();
+            Project mainProject = context.projectSet.get(antFilePath);
+            if (mainProject != null) {
                 context.mainAntTargets.add(file.getName() + "/" + mainProject.getDefaultTarget());
-            }
-            else {
-                context.exceptionList.add(new AntException("did nto found main ant file"));
+            } else {
+                context.exceptionList.add(new AntanalyzerException("did nto found main ant file"));
             }
         }
 
@@ -43,12 +46,12 @@ public class AntParser {
      */
     private void loadAntFiles(Context context, String root, String antFile) throws IOException {
         File file = new File(antFile);
-        if (context.antFileNameSet.contains(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName())) {
+        if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, file.getPath()) + "/" + file.getName())) {
             if (!context.antFilePathSet.contains(file.getPath())) {
-                context.exceptionList.add(new AntException("Ant file name already used", file.getPath(), 0, 0));
+                context.exceptionList.add(new AntanalyzerException("Ant file name already used", file.getPath(), 0, 0));
             }
         } else {
-            context.antFileNameSet.add(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
+            context.antFileNameSet.add(AntTools.extractRootFolder(context, file.getPath()) + "/" + file.getName());
         }
         Project project = new Project();
         context.projectSet.put(antFile.replace('\\', '/'), project);
@@ -61,9 +64,9 @@ public class AntParser {
             for (Task task : target.getTasks()) {
                 File subFile = AntTools.extractSubAntFile(context, root, task);
                 if (subFile != null) {
-                    if (context.antFileNameSet.contains(AntTools.extractRootFolder(context,subFile.getPath()) + "/" + subFile.getName()/*subFile.getName()*/)) {
+                    if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, subFile.getPath()) + "/" + subFile.getName()/*subFile.getName()*/)) {
                     } else {
-                        loadAntFiles(context, AntTools.extractRootFolder(context,subFile.getPath()), subFile.getPath());
+                        loadAntFiles(context, AntTools.extractRootFolder(context, subFile.getPath()), subFile.getPath());
                     }
                 }
             }

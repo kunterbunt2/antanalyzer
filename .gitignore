@@ -21,4 +21,6 @@ buildNumber.properties
 
 # project specific
 references/internal-build
+antanalyzer/readme.md
+antanalyzer/intern/lib
 

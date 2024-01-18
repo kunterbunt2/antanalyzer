@@ -1,9 +1,11 @@
 package de.bushnaq.abdalla.antanalyzer;
 
+import de.bushnaq.abdalla.antanalyzer.util.AntTools;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Target;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class Context {
@@ -13,11 +15,11 @@ public class Context {
     public Set<String> antFileNameSet = new TreeSet<>();// set of all ant files
     public Set<String> antFilePathSet = new TreeSet<>();// set of all ant file relative path, only used for error detection
     public Set<String> missingAntFiles = new TreeSet<>();// list of ant files referenced but missing
-    public List<AntException> exceptionList = new ArrayList<>();// list of all exceptions found during execution
+    public List<AntanalyzerException> exceptionList = new ArrayList<>();// list of all exceptions found during execution
     public Set<String> usedAntFiles = new HashSet<String>();
     public Set<String> unusedAntFiles = new HashSet<String>();
-    String folderRoot;
-    String absoluteFolderPath;
+    public String folderRoot;
+    public String absoluteFolderPath;
     List<String> mainAntTargets = new ArrayList<>();// all targets used when executing ant as parameter
     private String antFile;
     private boolean printTree;
@@ -56,10 +58,18 @@ public class Context {
 
     }
 
-    public void setAntFile(String antFile) {
-        this.antFile = antFile;
-        folderRoot = antFile.substring(0, antFile.lastIndexOf("/"));
-        absoluteFolderPath = new File(folderRoot).getAbsolutePath();
+    public void setAntFile(String antFile) throws IOException {
+        File file = new File(antFile);
+        this.antFile = antFile.replace('\\', '/');
+        if (this.antFile.indexOf('/') != -1) {
+            folderRoot = this.antFile.substring(0, this.antFile.lastIndexOf("/"));
+        }
+        else {
+            folderRoot = ".";
+        }
+        absoluteFolderPath = new File(folderRoot).getCanonicalPath();
+        this.antFile = AntTools.extractRootFolder(this, file.getPath()) + "/" + file.getName();
+
     }
 
     public void setMainAntTargets(List<String> mainAntTargets) {

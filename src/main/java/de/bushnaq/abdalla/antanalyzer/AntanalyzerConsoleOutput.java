@@ -1,11 +1,12 @@
 package de.bushnaq.abdalla.antanalyzer;
 
+import de.bushnaq.abdalla.antanalyzer.util.AntTools;
 import org.apache.tools.ant.Project;
 
 import java.util.List;
 
-public class AntConsoleOutput {
-    private static final String ANSI_BLUE = "\u001B[34m";
+public class AntanalyzerConsoleOutput {
+    private static final String ANSI_BLUE = "\u001B[36m";
     private static final String ANSI_RED = "\u001B[31m";
     private static final String ANSI_RESET = "\u001B[0m";    // Declaring ANSI_RESET so that we can reset the color
     private static final String ANSI_YELLOW = "\u001B[33m";
@@ -16,14 +17,14 @@ public class AntConsoleOutput {
     //    List<Boolean> connected = new ArrayList<Boolean>();
     public Boolean[] connected = new Boolean[1000];
 
-    protected AntConsoleOutput(Context context) {
+    protected AntanalyzerConsoleOutput(Context context) {
         this.context = context;
     }
 
     protected void printAntFiles() {
         int maxNameLength = 0;
         for (String antFile : context.antFileNameSet) {
-            maxNameLength = Math.max(maxNameLength, antFile.length()+5);
+            maxNameLength = Math.max(maxNameLength, antFile.length() + 5);
         }
 
         System.out.printf("\n%s# ant files%s\n", ANSI_BLUE, ANSI_RESET);
@@ -36,7 +37,7 @@ public class AntConsoleOutput {
             if (context.usedAntFiles.contains(antFile))
                 System.out.printf("%3d     %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
             else
-                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_YELLOW, antFile, ANSI_RESET, p.getTargets().size());
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_RED, antFile, ANSI_RESET, p.getTargets().size());
             antFileCount++;
             targetCount += p.getTargets().size();
         }
@@ -47,11 +48,10 @@ public class AntConsoleOutput {
     }
 
     protected void printExceptions() {
-        if(!context.exceptionList.isEmpty())
-        {
+        if (!context.exceptionList.isEmpty()) {
             System.out.printf("\n%s# exceptions%s\n", ANSI_BLUE, ANSI_RESET);
             int exceptionCount = 0;
-            for (AntException e : context.exceptionList) {
+            for (AntanalyzerException e : context.exceptionList) {
                 System.out.printf("%s%03d '%s' %s %d:%d%n%s", ANSI_RED, exceptionCount + 1, e.getMessage(), e.file, e.lineNumber, e.columnNumber, ANSI_RESET);
                 exceptionCount++;
             }
@@ -73,9 +73,8 @@ public class AntConsoleOutput {
         System.out.printf("\n%s# statistics%s\n", ANSI_BLUE, ANSI_RESET);
         System.out.printf("%3d targets in %d ant file(s)\n", context.targetMap.keySet().size(), context.projectSet.size());
         int usedTargetCount = 0;
-        for(MultiAntTarget target:context.targetMap.values())
-        {
-            if(target.isUsed)
+        for (MultiAntTarget target : context.targetMap.values()) {
+            if (target.isUsed)
                 usedTargetCount++;
         }
         System.out.printf("%3d used targets in %d ant file(s)\n", usedTargetCount, context.usedAntFiles.size());
@@ -96,12 +95,12 @@ public class AntConsoleOutput {
             for (int x = 0; x < target.tree.size(y); x++) {
                 TreeNode node = target.tree.get(x, y);
                 if (node != null) {
-                    line +=ANSI_GRAY;
+                    line += ANSI_GRAY;
                     if (node.isLastChildNode) {
-                        line += "└── ";
+                        line += "\u2514\u2500\u2500 ";//└──
                         connected[x] = false;
                     } else {
-                        line += "├── ";
+                        line += "\u251C\u2500\u2500 ";//├──
                         connected[x] = true;
                     }
                     line += ANSI_RESET;
@@ -113,15 +112,15 @@ public class AntConsoleOutput {
                         line += ANSI_BLUE;
                         line += "";
                     } else {
-                        line += ANSI_YELLOW;
+                        line += ANSI_RED;
                         line += "[X] ";
                     }
                     line += node.label;
                     line += ANSI_RESET;
                 } else {
-                    line +=ANSI_GRAY;
+                    line += ANSI_GRAY;
                     if (connected[x]) {
-                        line += "│   ";
+                        line += "\u2502   ";//│
                     } else {
                         line += "    ";
                     }
@@ -142,7 +141,7 @@ public class AntConsoleOutput {
             }
         }
         int targetCount = 0;
-        System.out.printf("\n%s# target tree (yellow=unused, blue=used, green=main)%s\n", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("\n%s# target tree (%sred=unused%s, %sblue=used%s, %sgreen=main%s)%s\n", ANSI_BLUE, ANSI_RED, ANSI_RESET, ANSI_BLUE, ANSI_RESET, ANSI_GREEN, ANSI_RESET, ANSI_RESET);
         for (MultiAntTarget target : list) {
             if (!target.isSubTarget) {
                 System.out.printf("\n");
@@ -167,7 +166,7 @@ public class AntConsoleOutput {
         int targetCount = 0;
         for (MultiAntTarget target : list) {
             if (!target.isUsed) {
-                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_YELLOW, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_RED, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
                 targetCount++;
             }
         }

@@ -1,5 +1,8 @@
-package de.bushnaq.abdalla.antanalyzer;
+package de.bushnaq.abdalla.antanalyzer.util;
 
+import de.bushnaq.abdalla.antanalyzer.AntanalyzerException;
+import de.bushnaq.abdalla.antanalyzer.Context;
+import de.bushnaq.abdalla.antanalyzer.MultiAntTarget;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Task;
 
@@ -34,13 +37,17 @@ public class AntTools {
     public static String extractFileName(String fileName) {
         return new File(fileName).getName();
     }
+
     public static String extractRootFolder(Context context, String antFile) {
         if (antFile.startsWith(context.absoluteFolderPath)) {
             antFile = antFile.substring(context.absoluteFolderPath.length() + 1);
             antFile = context.folderRoot + "/" + antFile;
         }
         String fixedString = antFile.replace('\\', '/');
-        return fixedString.substring(0, fixedString.lastIndexOf("/"));
+        if (fixedString.indexOf('/') != -1)
+            return fixedString.substring(0, fixedString.lastIndexOf("/"));
+        else
+            return ".";
     }
 
     public static File extractSubAntFile(Context context, String root, Task task) {
@@ -58,7 +65,7 @@ public class AntTools {
                 } else {
                     if (!context.missingAntFiles.contains(subAntFile)) {
                         context.missingAntFiles.add(subAntFile);
-                        context.exceptionList.add(new AntException("cannot find referenced ant file", subAntFile, task.getLocation().getLineNumber(), task.getLocation().getColumnNumber()));
+                        context.exceptionList.add(new AntanalyzerException("cannot find referenced ant file", subAntFile, task.getLocation().getLineNumber(), task.getLocation().getColumnNumber()));
                     }
                 }
             } else {

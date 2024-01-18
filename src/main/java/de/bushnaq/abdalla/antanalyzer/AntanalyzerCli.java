@@ -10,7 +10,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 
 
-public class ApplicationCli {
+public class AntanalyzerCli {
     public static final String APPLICATION = "antalyzer";
     protected static final String CLI_OPTION_ANT_FILE = "ant-file";
     protected static final String CLI_OPTION_ANT_TARGETS = "ant-targets";
@@ -24,7 +24,7 @@ public class ApplicationCli {
     Options options;
     CommandLine line;
 
-    public ApplicationCli(Context context) {
+    public AntanalyzerCli(Context context) {
         this.context = context;
     }
 
@@ -42,7 +42,6 @@ public class ApplicationCli {
     public boolean start(String[] args) throws Exception {
         try {
             createParser(args);
-
             if (parse()) return true;
 
         } catch (ParseException exp) {
