@@ -1,5 +1,8 @@
 package de.bushnaq.abdalla.antanalyzer.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayDeque;
@@ -7,21 +10,20 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class PerformanceCounters implements AutoCloseable {
-    static Map<String, Long> counters = new HashMap<>();
     static final String DELTA_SYMBOL = "";
     static final String BLACK_LEFT_POINTING_TRIANGLE = "<";
+    static final String SUM_SYMBOL = "";
+    static Map<String, Long> counters = new HashMap<>();
     // private final static Logger logger =
     // LoggerFactory.getLogger(PerformanceCounters.class);
     static Deque<ProfilingCounterSet> stack = new ArrayDeque<>();
-    static final String SUM_SYMBOL = "";
     static ProfilingCounterSet total = new ProfilingCounterSet();
+
     static {
         push(LoggerFactory.getLogger(PerformanceCounters.class));// push first element
     }
+
     PerformanceCounterType type;
     long start;
 
@@ -138,49 +140,49 @@ public class PerformanceCounters implements AutoCloseable {
     @Override
     public void close() throws Exception {
         switch (type) {
-        case Graphics: {
-            total.setGraphicsCount(total.getGraphicsCount() + 1);
-            final long end = System.nanoTime();
-            final long delta = end - start;
-            total.setGraphicsTimeNanoSec(total.getGraphicsTimeNanoSec() + delta);
-            // logger.trace(String.format("count = %d delta = %dns sum = %ds",
-            // graphicsCount, delta, graphicsTime / 1000000000));
-        }
+            case Graphics: {
+                total.setGraphicsCount(total.getGraphicsCount() + 1);
+                final long end = System.nanoTime();
+                final long delta = end - start;
+                total.setGraphicsTimeNanoSec(total.getGraphicsTimeNanoSec() + delta);
+                // logger.trace(String.format("count = %d delta = %dns sum = %ds",
+                // graphicsCount, delta, graphicsTime / 1000000000));
+            }
             break;
-        case Smb: {
-            total.setSmbCount(total.getSmbCount() + 1);
-            final long end = System.nanoTime();
-            final long delta = end - start;
-            total.setSmbTimeNanoSec(total.getSmbTimeNanoSec() + delta);
-            // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
-            // delta, sqlTime / 1000000000));
-        }
+            case Smb: {
+                total.setSmbCount(total.getSmbCount() + 1);
+                final long end = System.nanoTime();
+                final long delta = end - start;
+                total.setSmbTimeNanoSec(total.getSmbTimeNanoSec() + delta);
+                // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
+                // delta, sqlTime / 1000000000));
+            }
             break;
-        case Calc: {
-            total.setCalcCount(total.getCalcCount() + 1);
-            final long end = System.nanoTime();
-            final long delta = end - start;
-            total.calcTimeNanoSec += delta;
-            // logger.trace(String.format("calc-delta = %dms", delta / 1000000));
-        }
+            case Calc: {
+                total.setCalcCount(total.getCalcCount() + 1);
+                final long end = System.nanoTime();
+                final long delta = end - start;
+                total.calcTimeNanoSec += delta;
+                // logger.trace(String.format("calc-delta = %dms", delta / 1000000));
+            }
             break;
-        case Sql: {
-            total.setSqlCount(total.getSqlCount() + 1);
-            final long end = System.nanoTime();
-            final long delta = end - start;
-            total.setSqlTimeNanoSec(total.getSqlTimeNanoSec() + delta);
-            // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
-            // delta, sqlTime / 1000000000));
-        }
+            case Sql: {
+                total.setSqlCount(total.getSqlCount() + 1);
+                final long end = System.nanoTime();
+                final long delta = end - start;
+                total.setSqlTimeNanoSec(total.getSqlTimeNanoSec() + delta);
+                // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
+                // delta, sqlTime / 1000000000));
+            }
             break;
-        case Net: {
-            total.setNetCount(total.getNetCount() + 1);
-            final long end = System.nanoTime();
-            final long delta = end - start;
-            total.setNetTimeNanoSec(total.getNetTimeNanoSec() + delta);
-            // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
-            // delta, sqlTime / 1000000000));
-        }
+            case Net: {
+                total.setNetCount(total.getNetCount() + 1);
+                final long end = System.nanoTime();
+                final long delta = end - start;
+                total.setNetTimeNanoSec(total.getNetTimeNanoSec() + delta);
+                // logger.trace(String.format("count = %d delta = %dns sum = %ds", sqlCount,
+                // delta, sqlTime / 1000000000));
+            }
             break;
         }
     }

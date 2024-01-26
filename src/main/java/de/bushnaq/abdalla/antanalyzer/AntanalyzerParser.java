@@ -19,7 +19,7 @@ public class AntanalyzerParser {
     }
 
     void loadAntFiles() throws IOException {
-        loadAntFiles( context.folderRoot, context.getAntFile());
+        loadAntFiles(context.folderRoot, context.getAntFile());
         if (context.mainAntTargets.isEmpty()) {
             // use default target of main ant file.
             File file = new File(context.getAntFile());
@@ -65,7 +65,7 @@ public class AntanalyzerParser {
                 if (subFile != null) {
                     if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, subFile.getPath()) + "/" + subFile.getName())) {
                     } else {
-                        loadAntFiles( AntTools.extractRootFolder(context, subFile.getPath()), subFile.getPath());
+                        loadAntFiles(AntTools.extractRootFolder(context, subFile.getPath()), subFile.getPath());
                     }
                 }
             }

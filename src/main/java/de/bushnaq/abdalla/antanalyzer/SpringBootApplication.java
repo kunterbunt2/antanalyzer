@@ -16,19 +16,19 @@ import java.util.ResourceBundle;
 @ComponentScan(basePackages = {"com.ricoh.sdced"})
 @org.springframework.boot.autoconfigure.SpringBootApplication
 public class SpringBootApplication implements CommandLineRunner {
-    private static boolean lazyStart = true;//for junit tests
     private static final String moduleVersion = getProperty(SpringBootApplication.class, "project.version");
     private static final String buildTime = getProperty(SpringBootApplication.class, "build.time");
+    private static boolean lazyStart = true;//for junit tests
     private static String startupMessage;
     private static boolean started = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    public SpringBootApplication() {
+    }
+
     public static String getProperty(Class<?> clazz, String name) {
         ResourceBundle bundle = ResourceBundle.getBundle("maven", Locale.getDefault(), clazz.getClassLoader());
         return bundle.getString(name);
-    }
-
-    public SpringBootApplication() {
     }
 
     /**
@@ -66,10 +66,11 @@ public class SpringBootApplication implements CommandLineRunner {
         if (!lazyStart) {
             try (de.bushnaq.abdalla.antanalyzer.util.TimeKeeping timeKeeping = new de.bushnaq.abdalla.antanalyzer.util.TimeKeeping(String.format("ended [%-25s].", AntanalyzerCli.APPLICATION))) {
                 Antanalyzer antAnalyzer = new Antanalyzer();
-            antAnalyzer.start(args);
+                antAnalyzer.start(args);
 
-            logger.info("------------------------------------------------------------------------");
-            logger.info(String.format("executed %s %s-%s in %s", AntanalyzerCli.APPLICATION, moduleVersion, buildTime, de.bushnaq.abdalla.antanalyzer.util.Util.createDurationString(timeKeeping.getDelta(), true, true, false)));            logger.info("------------------------------------------------------------------------");
+                logger.info("------------------------------------------------------------------------");
+                logger.info(String.format("executed %s %s-%s in %s", AntanalyzerCli.APPLICATION, moduleVersion, buildTime, de.bushnaq.abdalla.antanalyzer.util.Util.createDurationString(timeKeeping.getDelta(), true, true, false)));
+                logger.info("------------------------------------------------------------------------");
             }
         }
     }

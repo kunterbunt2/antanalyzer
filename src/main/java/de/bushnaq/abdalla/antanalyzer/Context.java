@@ -63,8 +63,7 @@ public class Context {
         this.antFile = antFile.replace('\\', '/');
         if (this.antFile.indexOf('/') != -1) {
             folderRoot = this.antFile.substring(0, this.antFile.lastIndexOf("/"));
-        }
-        else {
+        } else {
             folderRoot = ".";
         }
         absoluteFolderPath = new File(folderRoot).getCanonicalPath();

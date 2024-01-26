@@ -28,13 +28,13 @@ public class AntTree {
         }
         column.add(treeNode);
     }
-    public int size()
-    {
-        return  row.size();
+
+    public int size() {
+        return row.size();
     }
-    public int size(int y)
-    {
+
+    public int size(int y) {
         List<TreeNode> column = row.get(y);
-        return  column.size();
+        return column.size();
     }
 }

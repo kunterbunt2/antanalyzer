@@ -19,7 +19,7 @@ public class MultiAntTarget {
     }
 
     public boolean isReferenceingAntFile(Context context, String antFile) {
-        String root = AntTools.extractRootFolder(context, new File( target.getLocation().getFileName()).getPath());
+        String root = AntTools.extractRootFolder(context, new File(target.getLocation().getFileName()).getPath());
         for (Task task : target.getTasks()) {
             File subFile = AntTools.extractSubAntFile(context, root, task, true);
             if (subFile != null) {

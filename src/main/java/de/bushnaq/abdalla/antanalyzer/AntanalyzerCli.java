@@ -28,29 +28,19 @@ public class AntanalyzerCli {
         this.context = context;
     }
 
-    private void printHelp() throws IOException {
-        HelpFormatter formatter = new HelpFormatter();
-        StringWriter out = new StringWriter();
-        PrintWriter pw = new PrintWriter(out);
-        formatter.printHelp(pw, 200, APPLICATION, "----------", options, 0, 0, "----------", true);
-        pw.flush();
-        pw.close();
-        System.out.print(out.toString());
-        out.close();
-    }
+    private void createParser(String[] args) throws ParseException {
+        options = new Options();
+        options.addOption("h", CLI_OPTION_HELP, false, "print this message");
+        options.addOption("af", CLI_OPTION_ANT_FILE, true, "relative or absolute path to the main ant file. This parameter is not optional.");
+        options.addOption("pt", CLI_OPTION_PRINT_TREE, false, "print target dependency tree. This parameter is optional. Default is disabled.");
+        options.addOption("put", CLI_OPTION_PRINT_UNUSED_TARGETS, false, "print unused target. This parameter is optional. Default is disabled.");
+        options.addOption("paf", CLI_OPTION_PRINT_ANT_FILES, false, "print ant file list. This parameter is optional. Default is disabled.");
+        options.addOption("at", CLI_OPTION_ANT_TARGETS, true, "list of all targets used when executing ant as parameter. This list is used to mark all targets that are needed to execute these targets as used. If omitted, the default target of the main ant file is used.");
 
-    public boolean start(String[] args) throws Exception {
-        try {
-            createParser(args);
-            if (parse()) return true;
-
-        } catch (ParseException exp) {
-            logger.error(String.format("Parsing failed.  Reason: %s", exp.getMessage()), exp);
-        } finally {
-            line = null;
-            options = null;
-        }
-        return false;
+        // create the parser
+        CommandLineParser parser = new DefaultParser();
+        // parse the command line arguments
+        line = parser.parse(options, args);
     }
 
     private boolean parse() throws IOException {
@@ -91,19 +81,29 @@ public class AntanalyzerCli {
         return false;
     }
 
-    private void createParser(String[] args) throws ParseException {
-        options = new Options();
-        options.addOption("h", CLI_OPTION_HELP, false, "print this message");
-        options.addOption("af", CLI_OPTION_ANT_FILE, true, "relative or absolute path to the main ant file. This parameter is not optional.");
-        options.addOption("pt", CLI_OPTION_PRINT_TREE, false, "print target dependency tree. This parameter is optional. Default is disabled.");
-        options.addOption("put", CLI_OPTION_PRINT_UNUSED_TARGETS, false, "print unused target. This parameter is optional. Default is disabled.");
-        options.addOption("paf", CLI_OPTION_PRINT_ANT_FILES, false, "print ant file list. This parameter is optional. Default is disabled.");
-        options.addOption("at", CLI_OPTION_ANT_TARGETS, true, "list of all targets used when executing ant as parameter. This list is used to mark all targets that are needed to execute these targets as used. If omitted, the default target of the main ant file is used.");
+    private void printHelp() throws IOException {
+        HelpFormatter formatter = new HelpFormatter();
+        StringWriter out = new StringWriter();
+        PrintWriter pw = new PrintWriter(out);
+        formatter.printHelp(pw, 200, APPLICATION, "----------", options, 0, 0, "----------", true);
+        pw.flush();
+        pw.close();
+        System.out.print(out.toString());
+        out.close();
+    }
 
-        // create the parser
-        CommandLineParser parser = new DefaultParser();
-        // parse the command line arguments
-        line = parser.parse(options, args);
+    public boolean start(String[] args) throws Exception {
+        try {
+            createParser(args);
+            if (parse()) return true;
+
+        } catch (ParseException exp) {
+            logger.error(String.format("Parsing failed.  Reason: %s", exp.getMessage()), exp);
+        } finally {
+            line = null;
+            options = null;
+        }
+        return false;
     }
 
 
