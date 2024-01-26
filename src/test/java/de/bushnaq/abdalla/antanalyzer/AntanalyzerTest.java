@@ -139,6 +139,21 @@ class AntanalyzerTest {
     }
 
     @Test
+    @DisplayName("testCase_3_1( ant file, ant task, missing antfile, default target )")
+    @Order(31)
+    void testCase_3_1() throws Exception {
+        String[] args = {"-ant-file", "references/case_3_1/build.xml", "-pt", "-paf", "-put"};
+        Antanalyzer antAnalyzer = new Antanalyzer();
+        antAnalyzer.start(args);
+        assertEquals(1, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
+        assertEquals(5, antAnalyzer.context.targetMap.values().size(), "unexpected number of ant targets");
+        assertEquals(3, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
+        assertEquals(1, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
+        assertEquals(0, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
+        assertEquals(1, antAnalyzer.context.exceptionList.size(), "unexpected number of exceptions");
+        assertEquals(1, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
+    }
+    @Test
     @DisplayName("testNoParameters( no parameters )")
     @Order(1000)
     void testNoParameters() throws Exception {
@@ -171,7 +186,7 @@ class AntanalyzerTest {
     private int getUsedTargetCount(Collection<MultiAntTarget> values) {
         int count = 0;
         for (MultiAntTarget target : values) {
-            if (target.isUsed)
+            if (target.isNeeded)
                 count++;
         }
         return count;

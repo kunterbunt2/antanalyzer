@@ -36,7 +36,7 @@ jobs:
             TBD
           draft: false
           prerelease: false
-  build-windows-job:
+  build-job:
     name: build-windows-job
     runs-on: windows-latest
     needs: create-release-job
@@ -54,7 +54,7 @@ jobs:
         run: |
           mvn clean package -DskipTests --batch-mode --update-snapshots package
           dir target
-      - name: upload-msi-step
+      - name: upload-zip-step
         uses: shogo82148/actions-upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}

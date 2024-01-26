@@ -5,4 +5,5 @@ public class TreeNode {
     public boolean isUsed;
     public boolean isLastChildNode;
     public boolean isMainNode;
+    public boolean isErroneous;
 }

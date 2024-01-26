@@ -19,7 +19,7 @@ public class AntanalyzerParser {
     }
 
     void loadAntFiles() throws IOException {
-        loadAntFiles(context, context.folderRoot, context.getAntFile());
+        loadAntFiles( context.folderRoot, context.getAntFile());
         if (context.mainAntTargets.isEmpty()) {
             // use default target of main ant file.
             File file = new File(context.getAntFile());
@@ -39,12 +39,11 @@ public class AntanalyzerParser {
      * this method will look into:
      * any 'ant' sub task (example: <ant antfile="common/build-setup.xml" target="build.copy.x86" />)
      *
-     * @param context
      * @param root
      * @param antFile
      * @throws IOException
      */
-    private void loadAntFiles(Context context, String root, String antFile) throws IOException {
+    private void loadAntFiles(String root, String antFile) throws IOException {
         File file = new File(antFile);
         if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, file.getPath()) + "/" + file.getName())) {
             if (!context.antFilePathSet.contains(file.getPath())) {
@@ -62,11 +61,11 @@ public class AntanalyzerParser {
         for (String targetName : project.getTargets().keySet()) {
             Target target = project.getTargets().get(targetName);
             for (Task task : target.getTasks()) {
-                File subFile = AntTools.extractSubAntFile(context, root, task);
+                File subFile = AntTools.extractSubAntFile(context, root, task, false);
                 if (subFile != null) {
-                    if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, subFile.getPath()) + "/" + subFile.getName()/*subFile.getName()*/)) {
+                    if (context.antFileNameSet.contains(AntTools.extractRootFolder(context, subFile.getPath()) + "/" + subFile.getName())) {
                     } else {
-                        loadAntFiles(context, AntTools.extractRootFolder(context, subFile.getPath()), subFile.getPath());
+                        loadAntFiles( AntTools.extractRootFolder(context, subFile.getPath()), subFile.getPath());
                     }
                 }
             }

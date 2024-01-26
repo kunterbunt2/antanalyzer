@@ -37,14 +37,16 @@ public class AntanalyzerConsoleOutput {
             if (context.usedAntFiles.contains(antFile))
                 System.out.printf("%3d     %-" + maxNameLength + "s %4d%n", antFileCount, antFile, p.getTargets().size());
             else
-                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_RED, antFile, ANSI_RESET, p.getTargets().size());
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s %4d%n", antFileCount, ANSI_YELLOW, antFile, ANSI_RESET, p.getTargets().size());
             antFileCount++;
             targetCount += p.getTargets().size();
         }
+        for (String antFile : context.missingAntFiles) {
+            System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s%n", antFileCount, ANSI_RED, antFile, ANSI_RESET);
+            antFileCount++;
+            targetCount++;
+        }
         System.out.printf("%3d     %-" + maxNameLength + "s %4d%n", antFileCount, "sum of all ant files", context.targetMap.values().size());
-//        System.out.printf("%s// --------------------------------------------------------------------------------\n%s", ANSI_BLUE, ANSI_RESET);
-//        if (context.targetMap.values().size() != targetCount)
-//            context.exceptionList.add(new AntException(String.format("Sum of targets '%d' in all ant files does not match number of target '%d'", targetCount, context.targetMap.values().size())));
     }
 
     protected void printExceptions() {
@@ -74,7 +76,7 @@ public class AntanalyzerConsoleOutput {
         System.out.printf("%3d targets in %d ant file(s)\n", context.targetMap.keySet().size(), context.projectSet.size());
         int usedTargetCount = 0;
         for (MultiAntTarget target : context.targetMap.values()) {
-            if (target.isUsed)
+            if (target.isNeeded)
                 usedTargetCount++;
         }
         System.out.printf("%3d used targets in %d ant file(s)\n", usedTargetCount, context.usedAntFiles.size());
@@ -111,8 +113,11 @@ public class AntanalyzerConsoleOutput {
                     } else if (node.isUsed) {
                         line += ANSI_BLUE;
                         line += "";
-                    } else {
+                    } else if (node.isErroneous) {
                         line += ANSI_RED;
+                        line += "[X] ";
+                    } else {
+                        line += ANSI_YELLOW;
                         line += "[X] ";
                     }
                     line += node.label;
@@ -141,7 +146,7 @@ public class AntanalyzerConsoleOutput {
             }
         }
         int targetCount = 0;
-        System.out.printf("\n%s# target tree (%sred=unused%s, %sblue=used%s, %sgreen=main%s)%s\n", ANSI_BLUE, ANSI_RED, ANSI_RESET, ANSI_BLUE, ANSI_RESET, ANSI_GREEN, ANSI_RESET, ANSI_RESET);
+        System.out.printf("\n%s# target tree (%sred=referencing missing ant file%s, %syellow=not needed%s, %sblue=used%s, %sgreen=main%s)%s\n", ANSI_BLUE, ANSI_RED, ANSI_RESET, ANSI_YELLOW, ANSI_RESET, ANSI_BLUE, ANSI_RESET, ANSI_GREEN, ANSI_RESET, ANSI_RESET);
         for (MultiAntTarget target : list) {
             if (!target.isSubTarget) {
                 System.out.printf("\n");
@@ -158,15 +163,18 @@ public class AntanalyzerConsoleOutput {
         List<MultiAntTarget> list = AntTools.createGlobalTargetSortedList(context);
         int maxNameLength = 0;
         for (MultiAntTarget target : list) {
-            if (!target.isUsed) {
+            if (!target.isNeeded) {
                 maxNameLength = Math.max(maxNameLength, target.target.getName().length());
             }
         }
 
         int targetCount = 0;
         for (MultiAntTarget target : list) {
-            if (!target.isUsed) {
+            if (target.isErroneous) {
                 System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_RED, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
+                targetCount++;
+            } else if (!target.isNeeded) {
+                System.out.printf("%3d %s[X] %-" + maxNameLength + "s%s defined at %s %d:%d\n", targetCount + 1, ANSI_YELLOW, target.target.getName(), ANSI_RESET, target.target.getLocation().getFileName(), target.target.getLocation().getLineNumber(), target.target.getLocation().getColumnNumber());
                 targetCount++;
             }
         }

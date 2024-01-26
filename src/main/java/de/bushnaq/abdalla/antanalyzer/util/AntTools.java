@@ -17,14 +17,14 @@ public class AntTools {
         List<MultiAntTarget> list = new ArrayList<>(context.targetMap.values());
         Collections.sort(list, new Comparator<MultiAntTarget>() {
             public int compare(MultiAntTarget t1, MultiAntTarget t2) {
-                if (t1.isUsed == t2.isUsed) {
+                if (t1.isNeeded == t2.isNeeded) {
                     int file = t1.target.getLocation().getFileName().compareTo(t2.target.getLocation().getFileName());
                     if (file == 0)
                         return t1.target.getName().compareTo(t2.target.getName());
                     else return file;
                 }
 
-                if (t1.isUsed /*&& !t2.used*/)
+                if (t1.isNeeded /*&& !t2.used*/)
                     return -1;
                 else
                     return 1;
@@ -50,7 +50,7 @@ public class AntTools {
             return ".";
     }
 
-    public static File extractSubAntFile(Context context, String root, Task task) {
+    public static File extractSubAntFile(Context context, String root, Task task, boolean returnIfNotExist) {
         if (task.getTaskType().equals("ant")) {
             RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
             String taskAntfile = (String) runtimeConfigurableWrapper.getAttributeMap().get("antfile");
@@ -67,6 +67,8 @@ public class AntTools {
                         context.missingAntFiles.add(subAntFile);
                         context.exceptionList.add(new AntanalyzerException("cannot find referenced ant file", subAntFile, task.getLocation().getLineNumber(), task.getLocation().getColumnNumber()));
                     }
+                    if (returnIfNotExist)
+                        return file;
                 }
             } else {
                 //ant target in same ant file
