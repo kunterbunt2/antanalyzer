@@ -27,7 +27,8 @@ public class AntanalyzerConsoleOutput {
             maxNameLength = Math.max(maxNameLength, antFile.length() + 5);
         }
 
-        System.out.printf("\n%s# ant files%s\n", ANSI_BLUE, ANSI_RESET);
+//        System.out.printf("\n%s# ant files%s\n", ANSI_BLUE, ANSI_RESET);
+        System.out.printf("\n%s# ant files (%sred=missing file%s, %syellow=not needed%s)%s\n", ANSI_BLUE, ANSI_RED, ANSI_RESET, ANSI_YELLOW, ANSI_RESET, ANSI_RESET);
         String format = "#       %-" + maxNameLength + "s targets%n";
         System.out.printf(format, "Ant file name");
         int antFileCount = 0;

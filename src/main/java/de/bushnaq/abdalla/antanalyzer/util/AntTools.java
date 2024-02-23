@@ -5,12 +5,12 @@ import de.bushnaq.abdalla.antanalyzer.Context;
 import de.bushnaq.abdalla.antanalyzer.MultiAntTarget;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Task;
+import org.apache.tools.ant.TaskContainer;
+import org.apache.tools.ant.UnknownElement;
+import org.apache.tools.ant.taskdefs.Sequential;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class AntTools {
     public static List<MultiAntTarget> createGlobalTargetSortedList(Context context) {
@@ -72,6 +72,31 @@ public class AntTools {
                 }
             } else {
                 //ant target in same ant file
+            }
+        } else if (task.getTaskType().equals("for")) {
+            RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+            Enumeration<RuntimeConfigurable> children = runtimeConfigurableWrapper.getChildren();
+            while (children.hasMoreElements()) {
+                RuntimeConfigurable rc = children.nextElement();
+                if (rc.getElementTag().equalsIgnoreCase("sequential")) {
+                    Object proxy1 = rc.getProxy();
+                    if (proxy1 instanceof UnknownElement) {
+
+                        Task subtask = ((UnknownElement) proxy1);
+                        return extractSubAntFile(context, root, subtask, returnIfNotExist);
+                    }
+                }
+            }
+        } else if (task.getTaskType().equals("sequential")) {
+            RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+            Enumeration<RuntimeConfigurable> children = runtimeConfigurableWrapper.getChildren();
+            while (children.hasMoreElements()) {
+                RuntimeConfigurable rc = children.nextElement();
+                Object proxy1 = rc.getProxy();
+                if (proxy1 instanceof UnknownElement) {
+                    Task subtask = ((UnknownElement) proxy1);
+                    return extractSubAntFile(context, root, subtask, returnIfNotExist);
+                }
             }
         }
         return null;

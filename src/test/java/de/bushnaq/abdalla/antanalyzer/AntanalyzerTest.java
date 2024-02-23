@@ -189,9 +189,9 @@ class AntanalyzerTest {
         antAnalyzer.start(args);
         assertEquals(33, antAnalyzer.context.projectSet.size(), "unexpected number of ant files");
         assertEquals(1061, antAnalyzer.context.targetMap.values().size(), "unexpected number of ant targets");
-        assertEquals(342, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
-        assertEquals(15, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
-        assertEquals(18, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
+        assertEquals(344, getUsedTargetCount(antAnalyzer.context.targetMap.values()), "unexpected number of used ant targets");
+        assertEquals(16, antAnalyzer.context.usedAntFiles.size(), "unexpected number of used ant files");
+        assertEquals(17, antAnalyzer.context.unusedAntFiles.size(), "unexpected number of unused ant files");
         assertEquals(1, antAnalyzer.context.exceptionList.size(), "unexpected number of exceptions");
         assertEquals(1, antAnalyzer.context.missingAntFiles.size(), "unexpected number of missing ant files");
     }

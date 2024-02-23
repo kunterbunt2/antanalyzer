@@ -2,10 +2,7 @@ package de.bushnaq.abdalla.antanalyzer;
 
 import de.bushnaq.abdalla.antanalyzer.util.AntTools;
 import de.bushnaq.abdalla.antanalyzer.util.IntegerVariable;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.RuntimeConfigurable;
-import org.apache.tools.ant.Target;
-import org.apache.tools.ant.Task;
+import org.apache.tools.ant.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -107,56 +104,85 @@ public class Antanalyzer {
             }
         }
         for (Task task : target.getTasks()) {
-            if (task.getTaskType().equals("antcall")) {
-                //antcall subtask
-                RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
-                String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                MultiAntTarget childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+            listDependencies(context, target, logExceptions, task, dependencies);
+
+        }
+        return dependencies;
+    }
+
+    private static void listDependencies(Context context, Target target, boolean logExceptions, Task task, List<MultiAntTarget> dependencies) {
+        if (task.getTaskType().equals("antcall")) {
+            //antcall subtask
+            RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+            String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
+            MultiAntTarget childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+            if (childMultiAntTarget != null) {
+                dependencies.add(childMultiAntTarget);
+            } else if (logExceptions) {
+                context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+            }
+        }
+        if (task.getTaskType().equals("ant")) {
+            //ant sub task
+            File taskAntfile = AntTools.extractSubAntFile(context, AntTools.extractRootFolder(context, target.getLocation().getFileName()), task, false);
+            RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+            String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
+            if (taskAntfile != null) {
+                //target is in new ant file
+                MultiAntTarget childMultiAntTarget;
+                if (subTarget != null) {
+                    childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + subTarget);
+                } else {
+//                        Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
+                    childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + context.projectSet.get(AntTools.extractRootFolder(context, taskAntfile.getPath()) + "/" + taskAntfile.getName()).getDefaultTarget());
+                }
+                if (childMultiAntTarget != null) {
+                    dependencies.add(childMultiAntTarget);
+                } else if (logExceptions) {
+                    context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+                }
+            } else {
+                // target is in same ant file
+//                    RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
+//                    String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
+                MultiAntTarget childMultiAntTarget;
+                if (subTarget != null) {
+                    childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
+                } else {
+                    childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getProject().getDefaultTarget());
+                }
+
                 if (childMultiAntTarget != null) {
                     dependencies.add(childMultiAntTarget);
                 } else if (logExceptions) {
                     context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
                 }
             }
-            if (task.getTaskType().equals("ant")) {
-                //ant sub task
-                File taskAntfile = AntTools.extractSubAntFile(context, AntTools.extractRootFolder(context, target.getLocation().getFileName()), task, false);
-                RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
-                String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                if (taskAntfile != null) {
-                    //target is in new ant file
-                    MultiAntTarget childMultiAntTarget;
-                    if (subTarget != null) {
-                        childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + subTarget);
-                    } else {
-//                        Project mainProject = context.projectSet.get(AntTools.extractRootFolder(context,file.getPath()) + "/" + file.getName());
-                        childMultiAntTarget = context.targetMap.get(taskAntfile.getName() + "/" + context.projectSet.get(AntTools.extractRootFolder(context, taskAntfile.getPath()) + "/" + taskAntfile.getName()).getDefaultTarget());
-                    }
-                    if (childMultiAntTarget != null) {
-                        dependencies.add(childMultiAntTarget);
-                    } else if (logExceptions) {
-                        context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
-                    }
-                } else {
-                    // target is in same ant file
-//                    RuntimeConfigurable runtimeConfigurableWrapper = task.getRuntimeConfigurableWrapper();
-//                    String subTarget = (String) runtimeConfigurableWrapper.getAttributeMap().get("target");
-                    MultiAntTarget childMultiAntTarget;
-                    if (subTarget != null) {
-                        childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + subTarget);
-                    } else {
-                        childMultiAntTarget = context.targetMap.get(AntTools.extractFileName(target.getLocation().getFileName()) + "/" + target.getProject().getDefaultTarget());
-                    }
-
-                    if (childMultiAntTarget != null) {
-                        dependencies.add(childMultiAntTarget);
-                    } else if (logExceptions) {
-                        context.exceptionList.add(new AntanalyzerException("unknown target", target.getName(), target.getLocation().getLineNumber(), target.getLocation().getColumnNumber()));
+        } else if (task.getTaskType().equals("for")) {
+            RuntimeConfigurable runtimeConfigurableWrapper1 = task.getRuntimeConfigurableWrapper();
+            Enumeration<RuntimeConfigurable> children = runtimeConfigurableWrapper1.getChildren();
+            while (children.hasMoreElements()) {
+                RuntimeConfigurable rc = children.nextElement();
+                if (rc.getElementTag().equalsIgnoreCase("sequential")) {
+                    Object proxy1 = rc.getProxy();
+                    if (proxy1 instanceof UnknownElement) {
+                        Task subtask = ((UnknownElement) proxy1);
+                        listDependencies(context, target, logExceptions, subtask, dependencies);
                     }
                 }
             }
+        } else if (task.getTaskType().equals("sequential")) {
+            RuntimeConfigurable runtimeConfigurableWrapper2 = task.getRuntimeConfigurableWrapper();
+            Enumeration<RuntimeConfigurable> children = runtimeConfigurableWrapper2.getChildren();
+            while (children.hasMoreElements()) {
+                RuntimeConfigurable rc = children.nextElement();
+                Object proxy1 = rc.getProxy();
+                if (proxy1 instanceof UnknownElement) {
+                    Task subtask = ((UnknownElement) proxy1);
+                    listDependencies(context, target, logExceptions, subtask, dependencies);
+                }
+            }
         }
-        return dependencies;
     }
 
     private void markAntFiles() {
@@ -257,10 +283,10 @@ public class Antanalyzer {
             {
                 if (context.isPrintTree())
                     antanalyzerConsoleOutput.printTree();
-                if (context.isPrintAntFiles())
-                    antanalyzerConsoleOutput.printAntFiles();
                 if (context.isPrintUnusedTargets())
                     antanalyzerConsoleOutput.printUnusedTargets();
+                if (context.isPrintAntFiles())
+                    antanalyzerConsoleOutput.printAntFiles();
                 antanalyzerConsoleOutput.printMainTargets();
                 antanalyzerConsoleOutput.printStatistics();
                 antanalyzerConsoleOutput.printExceptions();
